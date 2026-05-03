@@ -4,6 +4,15 @@ import { getRewardForAction } from "@/lib/gamification/xp-taxonomy";
 import type { JourneyStage, User } from "@/lib/types";
 import { eq, sql } from "drizzle-orm";
 
+function pgErrorCode(error: unknown): string | undefined {
+  if (error && typeof error === "object") {
+    const o = error as { code?: string; cause?: { code?: string } };
+    if (typeof o.code === "string") return o.code;
+    if (o.cause && typeof o.cause.code === "string") return o.cause.code;
+  }
+  return undefined;
+}
+
 function mapUserRow(row: typeof users.$inferSelect): User {
   return {
     id: row.id,
@@ -69,6 +78,15 @@ export async function ensureUserFromAuth(auth: {
         supabase_uid: auth.id,
         email,
         full_name: fullName,
+        role: "student",
+        consent_given: false,
+        consent_timestamp: null,
+        onboarding_complete: false,
+        wow_completed: false,
+        journey_stage: "discover",
+        xp_points: 0,
+        streak_days: 0,
+        last_active_date: null,
       })
       .returning();
 
@@ -78,7 +96,15 @@ export async function ensureUserFromAuth(auth: {
     }
     return mapUserRow(row);
   } catch (error) {
-    console.error("[ensureUserFromAuth]", error);
+    const code = pgErrorCode(error);
+    const msg = error instanceof Error ? error.message : String(error);
+    if (code === "23505" || msg.includes("duplicate key")) {
+      const again = await getUserBySupabaseUID(auth.id);
+      if (again) {
+        return again;
+      }
+    }
+    console.error("[ensureUserFromAuth]", { code, message: msg, error });
     throw error;
   }
 }
@@ -94,8 +120,14 @@ export async function getUserBySupabaseUID(uid: string): Promise<User | null> {
     const row = rows[0];
     return row ? mapUserRow(row) : null;
   } catch (error) {
-    console.error("[getUserBySupabaseUID]", error);
-    throw error;
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("[getUserBySupabaseUID] query_failed", {
+      uid,
+      message: msg,
+      stack,
+    });
+    return null;
   }
 }
 
