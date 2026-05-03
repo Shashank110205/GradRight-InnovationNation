@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { affirmationForSelection } from "@/lib/onboarding/affirmations";
 import type { OnboardingQuestionKey } from "@/lib/types";
-import { ONBOARDING_INSIGHT_DWELL_MS } from "@/lib/onboarding/motion-timing";
+import {
+  ONBOARDING_EASE,
+  ONBOARDING_INSIGHT_DWELL_MS,
+  ONBOARDING_OPTION_STAGGER_CHILD,
+  ONBOARDING_OPTION_STAGGER_DELAY,
+} from "@/lib/onboarding/motion-timing";
 import { joinTargetCountries, parseTargetCountries } from "@/lib/types";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 
@@ -29,7 +34,10 @@ const listContainer = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.055, delayChildren: 0.04 },
+    transition: {
+      staggerChildren: ONBOARDING_OPTION_STAGGER_CHILD,
+      delayChildren: ONBOARDING_OPTION_STAGGER_DELAY,
+    },
   },
 };
 
@@ -39,7 +47,7 @@ const listItem = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: "spring", stiffness: 380, damping: 28 },
+    transition: { type: "spring", stiffness: 380, damping: 30 },
   },
 };
 
@@ -142,10 +150,10 @@ export function OnboardingStep({ question }: OnboardingStepProps) {
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            transition={{ type: "spring", stiffness: 280, damping: 26 }}
             className="w-full"
           >
-            <GlassCard gradient className="relative overflow-hidden p-8 md:p-10">
+            <GlassCard gradient className="relative overflow-hidden px-5 py-8 sm:px-8 md:p-10">
               <motion.div
                 animate={{ rotate: [0, 12, -12, 0] }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -157,18 +165,20 @@ export function OnboardingStep({ question }: OnboardingStepProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mt-6 text-center font-heading text-xl font-semibold leading-snug text-foreground md:text-2xl"
+                className="mt-6 text-balance text-center font-heading text-lg font-semibold leading-snug text-foreground sm:text-xl md:text-2xl"
               >
                 {affirmation}
               </motion.p>
-              <p className="mt-3 text-center text-sm text-muted-foreground">Tailoring what&apos;s next…</p>
+              <p className="mt-3 text-center text-sm text-muted-foreground">
+                Tailoring what&apos;s next — your strategist is lining up context.
+              </p>
               <button
                 type="button"
                 onClick={() => {
                   clearInsightAdvance();
                   nextStep();
                 }}
-                className="mt-6 w-full text-center text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                className="mt-6 min-h-11 w-full touch-manipulation text-center text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline active:opacity-80"
               >
                 Skip ahead →
               </button>
@@ -180,19 +190,21 @@ export function OnboardingStep({ question }: OnboardingStepProps) {
             initial={{ opacity: 0, x: 36, filter: "blur(4px)" }}
             animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, x: -28, filter: "blur(4px)" }}
-            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-            className="flex w-full flex-col gap-6"
+            transition={{ duration: 0.42, ease: ONBOARDING_EASE }}
+            className="flex w-full flex-col gap-5 sm:gap-6"
           >
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-brand-pink backdrop-blur-md">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-brand-pink backdrop-blur-md">
                 <Footprints className="h-3.5 w-3.5" />
                 Step {currentStepIndex + 1}
               </span>
-              <span className="text-xs text-muted-foreground">Your profile, one tap at a time</span>
+              <span className="text-xs text-muted-foreground">
+                Guided discovery — one thoughtful tap at a time
+              </span>
             </div>
 
             <div className="space-y-2">
-              <h2 className="font-heading text-3xl font-bold leading-[1.15] tracking-tight text-foreground md:text-4xl">
+              <h2 className="text-balance font-heading text-2xl font-bold leading-[1.18] tracking-tight text-foreground sm:text-3xl md:text-4xl">
                 {question.question}
               </h2>
               {isMulti ? (
@@ -225,7 +237,7 @@ export function OnboardingStep({ question }: OnboardingStepProps) {
                     onClick={() => (isMulti ? toggleMulti(option) : handleSelectSingle(option))}
                     disabled={locked && !isMulti}
                     className={cn(
-                      "group relative overflow-hidden rounded-2xl border p-4 text-left shadow-sm ring-0 transition-[box-shadow,ring-color,border-color]",
+                      "group relative min-h-[3.25rem] touch-manipulation overflow-hidden rounded-2xl border px-4 py-3.5 text-left shadow-sm ring-0 transition-[box-shadow,ring-color,border-color] sm:min-h-0 sm:py-4",
                       "hover:border-brand-primary/35 hover:shadow-[0_12px_40px_-16px_rgb(99_102_241/0.35)] hover:ring-2 hover:ring-brand-primary/25 pressable",
                       "disabled:pointer-events-none disabled:opacity-70",
                       isSel
@@ -258,7 +270,7 @@ export function OnboardingStep({ question }: OnboardingStepProps) {
               >
                 <Button
                   type="button"
-                  className="h-12 w-full rounded-2xl bg-gradient-to-r from-brand-primary to-brand-secondary text-base font-semibold text-white shadow-elegant ring-glow hover:opacity-95"
+                  className="min-h-12 w-full touch-manipulation rounded-2xl bg-gradient-to-r from-brand-primary to-brand-secondary text-base font-semibold text-white shadow-elegant ring-glow hover:opacity-95"
                   disabled={locked || multiSelected.length === 0}
                   onClick={() => confirmMulti()}
                 >
