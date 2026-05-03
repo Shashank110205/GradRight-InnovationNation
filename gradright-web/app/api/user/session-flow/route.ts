@@ -1,5 +1,5 @@
+import { ensureUserFromAuth, getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { createServerClient } from "@/lib/db/supabase";
-import { getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse> {
@@ -13,7 +13,18 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  const appUser = await getUserBySupabaseUID(authUser.id);
+  let appUser = await getUserBySupabaseUID(authUser.id);
+  if (!appUser && authUser.email) {
+    try {
+      appUser = await ensureUserFromAuth({
+        id: authUser.id,
+        email: authUser.email,
+        user_metadata: authUser.user_metadata as { full_name?: string },
+      });
+    } catch (e) {
+      console.error("[session-flow] ensureUserFromAuth failed", e);
+    }
+  }
   if (!appUser) {
     return NextResponse.json({
       authenticated: true,
