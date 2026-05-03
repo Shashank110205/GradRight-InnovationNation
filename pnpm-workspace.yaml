@@ -1,0 +1,4 @@
+# Only packages with a package.json (Python services stay outside the pnpm graph).
+packages:
+  - "gradright-web"
+  - "gradright-mobile"
