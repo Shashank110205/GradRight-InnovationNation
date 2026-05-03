@@ -1,0 +1,42 @@
+{
+  "CS": {
+    "US": 0.92,
+    "UK": 0.78,
+    "Canada": 0.85,
+    "Germany": 0.72,
+    "Australia": 0.68,
+    "domestic": 0.70
+  },
+  "Engineering": {
+    "US": 0.75,
+    "UK": 0.65,
+    "Canada": 0.72,
+    "Germany": 0.80,
+    "Australia": 0.62,
+    "domestic": 0.65
+  },
+  "Business": {
+    "US": 0.68,
+    "UK": 0.72,
+    "Canada": 0.65,
+    "Germany": 0.58,
+    "Australia": 0.60,
+    "domestic": 0.62
+  },
+  "Life Sciences": {
+    "US": 0.65,
+    "UK": 0.60,
+    "Canada": 0.62,
+    "Germany": 0.68,
+    "Australia": 0.58,
+    "domestic": 0.55
+  },
+  "Other": {
+    "US": 0.50,
+    "UK": 0.48,
+    "Canada": 0.50,
+    "Germany": 0.52,
+    "Australia": 0.45,
+    "domestic": 0.50
+  }
+}

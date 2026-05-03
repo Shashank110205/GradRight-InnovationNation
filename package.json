@@ -1,0 +1,21 @@
+{
+  "name": "gradright-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev:web": "pnpm --dir gradright-web dev",
+    "dev:web:all": "pnpm --dir gradright-web dev:all",
+    "build:web": "pnpm --dir gradright-web build",
+    "lint:web": "pnpm --dir gradright-web lint",
+    "typecheck:web": "pnpm --dir gradright-web exec tsc --noEmit",
+    "verify:web": "pnpm --dir gradright-web verify:architecture",
+    "verify:repo": "node scripts/verify-repo.mjs"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^19.2.0",
+      "@types/react-dom": "^19.2.0"
+    },
+    "ignoredBuiltDependencies": ["sharp", "unrs-resolver"]
+  }
+}

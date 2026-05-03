@@ -1,0 +1,48 @@
+# Root ignores — monorepo safety (each package may also define its own .gitignore)
+
+# Secrets & local env (templates stay tracked)
+**/.env*
+!**/.env.example
+
+# Dependencies & builds
+**/node_modules/
+**/.pnpm-store/
+
+# Next.js
+**/.next/
+**/out/
+**/dist/
+
+# Python
+**/venv/
+**/venv311/
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/*.egg-info/
+
+# Mobile / Expo
+**/.expo/
+**/web-build/
+
+# IDE & local tooling
+.cursor/
+.agents/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs & debug
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+**/.vercel/

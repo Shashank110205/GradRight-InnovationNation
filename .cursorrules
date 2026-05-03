@@ -1,0 +1,120 @@
+# ============================================================
+# GRADRIGHT — CURSOR AI MASTER RULES
+# Primary client: Expo (React Native) in gradright-mobile/
+# Backend: Python FastAPI in gradright-backend/ — ALL business logic here
+# Optional: gradright-web/ (Next.js) for web-only surfaces — no business logic in Next API routes;
+#   prefer calling FastAPI from the web app when extending the web client.
+# ============================================================
+
+## ARCHITECTURE OVERVIEW
+- **Mobile (primary):** Expo / React Native (`gradright-mobile/`). TypeScript is the default for Expo; use project conventions.
+- **Backend:** Python FastAPI — single source of business logic, AI (Claude), heavy DB work, OCR, PDF, email.
+- **Database:** Supabase (PostgreSQL) via supabase-py + SQLAlchemy (async) in the backend.
+- **AI:** Anthropic Python SDK (Claude); prompts live under `app/prompts/` in the backend.
+- **Communication:** Expo app calls FastAPI over HTTPS (REST). FastAPI returns JSON (and SSE for streaming chat).
+- **CORS:** FastAPI `CORSMiddleware` must allow the Expo dev origins (e.g. `http://localhost:8081`) and production app origins / schemes as configured.
+
+## RELATED DOCS
+- Backend build prompts: `PYTHON_BUILD_ORDER.md`
+- Backend setup: `PYTHON_SETUP.md`
+- Architecture reference: `ARCHITECTURE.md` (Expo SDK baseline noted there; verify when upgrading Expo)
+- `BUILD_ORDER.md` describes an alternate **Next.js + Drizzle** path — do **not** treat it as the primary stack unless explicitly migrating; default new work to **Expo + FastAPI**.
+
+---
+
+## ABSOLUTE RULES — NEVER VIOLATE
+
+### 1. LANGUAGE
+- ALL backend code: **Python 3.11+** ONLY
+- NO TypeScript, NO JavaScript in `gradright-backend/`
+- NO Next.js, NO Node.js runtime inside the Python backend
+- **Mobile:** TypeScript/JavaScript only inside `gradright-mobile/` — no Python there
+- **Optional web (`gradright-web/`):** TypeScript/React per that project; keep domain logic in FastAPI
+
+### 2. PYTHON STANDARDS
+- Python version: 3.11+
+- Package manager: pip with `requirements.txt`
+- Virtual environment: always use venv (`python -m venv venv`)
+- All Python files: type hints via `typing` / modern builtins
+- All Python functions: docstrings
+- Line length: max 100 characters
+- Formatting: Black-compatible (4-space indent, no trailing whitespace)
+
+### 3. FRAMEWORK + LIBRARIES (backend)
+- Web framework: FastAPI ONLY
+- HTTP server: Uvicorn
+- Database ORM: SQLAlchemy 2.0 (async) + Alembic
+- Supabase client: supabase-py (auth + storage)
+- Validation: Pydantic v2 for ALL request/response models
+- AI: anthropic (official Python SDK)
+- OCR: pytesseract (dev) → boto3 Textract (production)
+- Email: resend
+- HTTP client (outbound): httpx (async)
+- Rate limiting: slowapi
+- Redis: redis-py (async)
+- PDF: reportlab
+- Environment: python-dotenv + pydantic-settings
+- CORS: `fastapi.middleware.cors.CORSMiddleware`
+
+### 4. FOLDER STRUCTURE — gradright-backend/ (target layout)
+```
+gradright-backend/
+├── main.py
+├── requirements.txt
+├── .env                 # Never commit
+├── .env.example
+├── alembic.ini
+├── alembic/
+│   └── versions/
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── database.py
+│   ├── supabase_client.py
+│   ├── models/
+│   ├── schemas/
+│   ├── routers/
+│   ├── services/
+│   ├── prompts/
+│   ├── data/
+│   ├── utils/
+│   └── middleware/
+├── tests/
+└── scripts/
+```
+
+### 5. ENVIRONMENT VARIABLES (exact names)
+See `gradright-backend/.env.example`. Required for full features; health-only local runs may use placeholders until Supabase/DB are connected.
+
+### 6. API RESPONSE FORMAT
+Use `APIResponse[T]` from `app/schemas/base.py` for JSON endpoints (see existing rule examples in this file historically).
+
+### 7. DATABASE RULES
+- Async SQLAlchemy 2.0; UUID `id`, `created_at`, `updated_at` on tables
+- Migrations via Alembic only (once DB layer is active)
+
+### 8. ERROR HANDLING RULES
+- try/except in route handlers; `HTTPException` for expected errors; log with `logging.error`; no stack traces to clients in production
+- Log format: `[ROUTER][FUNCTION] Error description: {error}`
+
+### 9. AUTHENTICATION RULES
+- Supabase Auth; `Authorization: Bearer <token>` from the Expo app
+- `get_current_user` in `app/middleware/auth.py`; NBFC routes require `nbfc_supervisor`
+
+### 10. STREAMING (chatbot)
+- `StreamingResponse` + Claude `messages.stream()`; SSE chunks `data: {text}\n\n`
+
+---
+
+## SERVICE LAYER RULES
+- Thin routers; logic in `app/services/`
+- No Claude calls from routers — use `claude_service.py`
+
+## WHAT CURSOR MUST NEVER DO
+- Put business logic in route handlers (backend)
+- Call Anthropic from routers directly
+- Hardcode secrets
+- Use sync DB calls in FastAPI
+- Skip Pydantic validation on route bodies
+- Return untyped `dict` from public APIs — use Pydantic schemas
+- Add Python packages without updating `requirements.txt`
