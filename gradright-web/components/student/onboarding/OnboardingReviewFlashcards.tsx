@@ -31,14 +31,14 @@ export function OnboardingReviewFlashcards() {
     <div className="flex w-full max-w-lg flex-col gap-8">
       <div className="space-y-2 text-center">
         <p className="text-xs font-medium uppercase tracking-wide text-brand-primary">
-          Your story so far
+          Almost there
         </p>
         <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Flip through your choices
+          Meet the profile you just shaped
         </h2>
         <p className="text-sm text-muted-foreground">
-          A quick recap before we personalize your GradRight Score — like
-          flashcards for your study-abroad plan.
+          A quick flip-book before we personalize your GradRight Score — same voice as discovery, now in recap
+          form.
         </p>
       </div>
 

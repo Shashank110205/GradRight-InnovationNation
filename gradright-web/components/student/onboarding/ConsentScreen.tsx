@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { useState } from "react";
 
+import { ONBOARDING_EASE } from "@/lib/onboarding/motion-timing";
 import { GlassCard } from "@/components/shell/GlassCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,37 +24,41 @@ export function ConsentScreen() {
       initial={{ opacity: 0, x: 28 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -28 }}
-      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.38, ease: ONBOARDING_EASE }}
       className="flex w-full max-w-lg flex-col gap-6"
     >
       <GlassCard gradient className="p-6 md:p-8">
-      <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-brand-primary">
-          Before your score
-        </p>
-        <h2 className="text-2xl font-semibold leading-snug tracking-tight md:text-3xl">
-          How we use your answers
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          We need your consent to personalize your GradRight Score and
-          dashboard.
-        </p>
-      </div>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-primary/30 bg-brand-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-primary">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Final step before your score
+          </span>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-brand-primary">
+            Trust, then reveal
+          </p>
+          <h2 className="text-2xl font-semibold leading-snug tracking-tight md:text-3xl">
+            How we use what you shared
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Your consent lets us personalize your GradRight Score and dashboard with the same premium tone you
+            felt in discovery — transparent, strategic, never spammy.
+          </p>
+        </div>
 
-      <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-foreground marker:text-brand-primary">
-        <li>
-          We collect your study plans, field, budget, and loan intent to model
-          placement and financing signals.
-        </li>
-        <li>
-          Data is used to show matches, salary ranges, and eligibility hints —
-          not sold to third parties for unrelated marketing.
-        </li>
-        <li>
-          AI assists with explanations and copy; it does not auto-approve loans
-          or replace lender decisions.
-        </li>
-      </ul>
+        <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-foreground marker:text-brand-primary">
+          <li>
+            We use your study plans, field, budget, and funding intent to model placement and financing signals —
+            always as guidance, not a guarantee.
+          </li>
+          <li>
+            Outputs stay in-product for your journey — not sold for unrelated third-party marketing.
+          </li>
+          <li>
+            AI helps explain and narrate; it does not auto-approve loans or replace lender decisions.
+          </li>
+        </ul>
 
       {error ? (
         <Alert variant="destructive">
@@ -77,11 +82,11 @@ export function ConsentScreen() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Button
           type="button"
-          className="h-11 flex-1 rounded-2xl bg-gradient-to-r from-brand-primary to-brand-secondary font-semibold text-white shadow-elegant hover:opacity-95"
+          className="min-h-12 flex-1 touch-manipulation rounded-2xl bg-gradient-to-r from-brand-primary to-brand-secondary text-base font-semibold text-white shadow-elegant hover:opacity-95"
           disabled={!checked || isLoading}
           onClick={() => submitOnboarding()}
         >
-          {isLoading ? "Building your score…" : "Get My GradRight Score"}
+          {isLoading ? "Building your score…" : "Reveal My GradRight Score"}
         </Button>
       </div>
       </GlassCard>

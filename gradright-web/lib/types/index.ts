@@ -107,13 +107,13 @@ export function joinTargetCountries(countries: string[]): string {
   return countries.filter(Boolean).join(TARGET_COUNTRY_SEPARATOR);
 }
 
-/** Exact copy order from FEATURE_SPECS.md Module 1 — do not change. */
+/** Question order and keys are stable; display copy may evolve for UX. */
 export const ONBOARDING_QUESTIONS = [
   {
     step: 1,
     key: "target_country" as const,
     multiSelect: true,
-    question: "Where are you planning to study? (pick all that apply)",
+    question: "Where are you aiming to build your future? (pick all that apply)",
     options: [
       "United States",
       "United Kingdom",
@@ -126,7 +126,7 @@ export const ONBOARDING_QUESTIONS = [
   {
     step: 2,
     key: "degree_type" as const,
-    question: "What degree are you aiming for?",
+    question: "What qualification are you steering toward?",
     options: [
       "Masters (MS/MSc)",
       "MBA",
@@ -138,7 +138,7 @@ export const ONBOARDING_QUESTIONS = [
   {
     step: 3,
     key: "broad_field" as const,
-    question: "What is your target field?",
+    question: "Which discipline best matches the direction you want?",
     options: [
       "Computer Science / IT",
       "Engineering",
@@ -151,7 +151,7 @@ export const ONBOARDING_QUESTIONS = [
   {
     step: 4,
     key: "target_intake" as const,
-    question: "When are you planning to start?",
+    question: "When do you want to start this chapter?",
     options: [
       "Fall 2025",
       "Spring 2026",
@@ -163,7 +163,7 @@ export const ONBOARDING_QUESTIONS = [
   {
     step: 5,
     key: "current_academic_level" as const,
-    question: "Where are you right now?",
+    question: "Where are you in your journey right now?",
     options: [
       "2nd year undergraduate",
       "Final year undergraduate",
@@ -175,7 +175,7 @@ export const ONBOARDING_QUESTIONS = [
   {
     step: 6,
     key: "budget_band_usd" as const,
-    question: "What is your approximate annual budget for tuition?",
+    question: "What financial comfort zone feels realistic for tuition each year?",
     options: [
       "Under $30,000",
       "$30,000 – $50,000",
@@ -187,7 +187,7 @@ export const ONBOARDING_QUESTIONS = [
   {
     step: 7,
     key: "loan_needed" as const,
-    question: "Are you planning to take an education loan?",
+    question: "How are you thinking about funding this chapter?",
     options: [
       "Yes, definitely",
       "Yes, probably",

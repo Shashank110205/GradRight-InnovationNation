@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
+import { ONBOARDING_EASE } from "@/lib/onboarding/motion-timing";
 import { readDashboardPreview } from "@/lib/dashboard-preview";
 import { ONBOARDING_QUESTIONS, type GradRightScore } from "@/lib/types";
 import { useOnboardingStore } from "@/stores/onboarding-store";
@@ -48,7 +49,7 @@ export function OnboardingShell({
     gradRightScore !== null || (isLoading && currentStep === 8);
 
   return (
-    <div className="relative min-h-[calc(100vh-0px)] w-full overflow-hidden">
+    <div className="relative min-h-[calc(100vh-0px)] w-full overflow-x-hidden overflow-y-auto">
       <div
         className="pointer-events-none fixed inset-0 opacity-90"
         style={{
@@ -61,7 +62,7 @@ export function OnboardingShell({
       />
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(to_right,oklch(0.145_0_0/0.03)_1px,transparent_1px),linear-gradient(to_bottom,oklch(0.145_0_0/0.03)_1px,transparent_1px)] bg-[size:48px_48px] dark:bg-[linear-gradient(to_right,oklch(1_0_0/0.04)_1px,transparent_1px),linear-gradient(to_bottom,oklch(1_0_0/0.04)_1px,transparent_1px)]" />
 
-      <div className="relative z-10 flex min-h-[calc(100vh-0px)] w-full flex-col items-center px-4 py-8 md:py-12">
+      <div className="relative z-10 flex min-h-[calc(100vh-0px)] w-full flex-col items-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 md:px-6 md:py-12">
         <motion.div layout className="flex w-full max-w-2xl flex-col items-center">
           {!showScoreView ? (
             <OnboardingProgress currentStep={currentStep} />
@@ -75,7 +76,7 @@ export function OnboardingShell({
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.35 }}
+                  transition={{ duration: 0.4, ease: ONBOARDING_EASE }}
                   className="flex w-full flex-col items-center"
                 >
                   <GradRightScoreScreen
@@ -100,7 +101,7 @@ export function OnboardingShell({
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.35 }}
+                  transition={{ duration: 0.42, ease: ONBOARDING_EASE }}
                 >
                   <OnboardingReviewFlashcards />
                 </motion.div>

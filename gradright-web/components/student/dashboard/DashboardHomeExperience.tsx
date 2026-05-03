@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Compass,
   Flame,
+  GraduationCap,
   Sparkles,
   Target,
   Wallet,
@@ -159,6 +160,50 @@ export function DashboardHomeExperience({
         <div>
           <JourneyBar currentStage={journeyStage} />
         </div>
+
+        <section
+          aria-label="What to do next"
+          className="scroll-mt-6 rounded-2xl border border-border/70 bg-card/55 p-4 shadow-sm backdrop-blur-sm md:p-5"
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Start here
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            You&apos;re in — pick one move to keep momentum. Everything below builds on this.
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <Link
+              href="/dashboard/score-upgrade"
+              className={cn(
+                buttonVariants({ variant: "default", size: "sm" }),
+                "h-11 justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-md hover:opacity-95"
+              )}
+            >
+              <Target className="h-4 w-4 shrink-0" aria-hidden />
+              Improve your score
+            </Link>
+            <Link
+              href={MODULE_ROUTES.discover}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "h-11 justify-center gap-2 rounded-xl border-border/80 bg-background/60 backdrop-blur-sm"
+              )}
+            >
+              <GraduationCap className="h-4 w-4 shrink-0" aria-hidden />
+              Explore universities
+            </Link>
+            <Link
+              href={MODULE_ROUTES.finance}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "h-11 justify-center gap-2 rounded-xl border-border/80 bg-background/60 backdrop-blur-sm"
+              )}
+            >
+              <Wallet className="h-4 w-4 shrink-0" aria-hidden />
+              Check financing readiness
+            </Link>
+          </div>
+        </section>
 
         <section aria-label="GradScore and accuracy" className="scroll-mt-20">
           <GlassCard className="relative overflow-hidden border-brand-primary/25 bg-gradient-to-br from-brand-primary/12 via-card to-violet-500/10 p-6 shadow-md md:p-7">
