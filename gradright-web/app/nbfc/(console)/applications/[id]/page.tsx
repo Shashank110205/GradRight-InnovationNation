@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ApplicationTimeline } from "@/components/partner/ApplicationTimeline";
+import { buttonVariants } from "@/components/ui/button";
 import { DecisionActions } from "@/components/partner/DecisionActions";
 import { DocumentList } from "@/components/partner/DocumentList";
 import { StudentProfileSummary } from "@/components/partner/StudentProfileSummary";
@@ -12,6 +13,7 @@ import { RiskScoreDisplay } from "@/components/student/career/RiskScoreDisplay";
 import { SalaryBandDisplay } from "@/components/student/career/SalaryBandDisplay";
 import { getNBFCApplicationDetailForSupervisor } from "@/lib/db/queries/applications";
 import { calculateROI } from "@/lib/utils/calculations";
+import { cn } from "@/lib/utils";
 
 export default async function NbfcApplicationDetailPage({
   params,
@@ -53,13 +55,53 @@ export default async function NbfcApplicationDetailPage({
             {application.institute ?? "Institute TBD"}
           </p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            Requested loan
-          </p>
-          <p className="font-heading text-lg font-semibold tabular-nums text-slate-900 dark:text-slate-50">
-            ₹{new Intl.NumberFormat("en-IN").format(loanInr)}
-          </p>
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start">
+          <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
+            <p className="text-xs uppercase tracking-wide text-slate-500">
+              Requested loan
+            </p>
+            <p className="font-heading text-lg font-semibold tabular-nums text-slate-900 dark:text-slate-50">
+              ₹{new Intl.NumberFormat("en-IN").format(loanInr)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`mailto:?subject=${encodeURIComponent(
+                `GradRight lead: ${application.full_name ?? "Applicant"}`
+              )}&body=${encodeURIComponent(
+                `Application ID: ${application.id}\nProgram: ${application.program ?? "—"}\nInstitute: ${application.institute ?? "—"}`
+              )}`}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "text-xs font-semibold"
+              )}
+            >
+              Reach out
+            </a>
+            <a
+              href={`mailto:?subject=${encodeURIComponent(
+                `Counsel session — ${application.full_name ?? "Applicant"}`
+              )}&body=${encodeURIComponent(
+                "Schedule a counseling touchpoint. Applicant context is in GradRight NBFC console."
+              )}`}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "text-xs font-semibold"
+              )}
+            >
+              Counsel
+            </a>
+            <button
+              type="button"
+              title="Wire to your LOS / credit workflow"
+              className={cn(
+                buttonVariants({ variant: "default", size: "sm" }),
+                "text-xs font-semibold"
+              )}
+            >
+              Pre-qualify
+            </button>
+          </div>
         </div>
       </div>
 

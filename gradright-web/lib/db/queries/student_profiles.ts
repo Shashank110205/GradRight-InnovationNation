@@ -4,6 +4,18 @@ import type { OnboardingAnswers, StudentProfile } from "@/lib/types";
 import type { RiskScorePostBody } from "@/lib/validations/risk-score-input";
 import { eq } from "drizzle-orm";
 
+function asRecord(v: unknown): Record<string, unknown> {
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    return v as Record<string, unknown>;
+  }
+  return {};
+}
+
+function asStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((x): x is string => typeof x === "string");
+}
+
 function mapProfileRow(row: typeof student_profiles.$inferSelect): StudentProfile {
   return {
     id: row.id,
@@ -28,6 +40,22 @@ function mapProfileRow(row: typeof student_profiles.$inferSelect): StudentProfil
     ielts_score: row.ielts_score != null ? Number(row.ielts_score) : null,
     toefl_score: row.toefl_score ?? null,
     parent_contact_email: row.parent_contact_email ?? null,
+    resume_file_url: row.resume_file_url ?? null,
+    aspiration_text: row.aspiration_text ?? null,
+    five_year_goal: row.five_year_goal ?? null,
+    dream_role: row.dream_role ?? null,
+    parsed_resume_json: asRecord(row.parsed_resume_json),
+    extracted_skills: asStringArray(row.extracted_skills),
+    extracted_projects: Array.isArray(row.extracted_projects)
+      ? row.extracted_projects
+      : [],
+    extracted_internships: Array.isArray(row.extracted_internships)
+      ? row.extracted_internships
+      : [],
+    scholarship_priority: row.scholarship_priority ?? null,
+    profile_completeness_score: row.profile_completeness_score ?? 0,
+    enrichment_status: row.enrichment_status ?? null,
+    last_enriched_at: row.last_enriched_at ?? null,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -122,5 +150,77 @@ export async function updateStudentProfileFromRiskForm(
   await db
     .update(student_profiles)
     .set(patch)
+    .where(eq(student_profiles.user_id, userId));
+}
+
+export type ProfileIntelligencePatch = {
+  aspiration_text: string | null;
+  five_year_goal: string | null;
+  dream_role: string | null;
+  scholarship_priority: string | null;
+  target_country: string | null;
+  resume_file_url: string | null;
+  parsed_resume_json: Record<string, unknown>;
+  extracted_skills: string[];
+  extracted_projects: unknown[];
+  extracted_internships: unknown[];
+  profile_completeness_score: number;
+  enrichment_status: string;
+  last_enriched_at: string;
+};
+
+/** PROFILE engine writes — merges structured enrichment into `student_profiles`. */
+export async function applyProfileIntelligenceEnrichment(
+  userId: string,
+  patch: ProfileIntelligencePatch
+): Promise<StudentProfile> {
+  const now = new Date().toISOString();
+  const rows = await db
+    .update(student_profiles)
+    .set({
+      aspiration_text: patch.aspiration_text,
+      five_year_goal: patch.five_year_goal,
+      dream_role: patch.dream_role,
+      scholarship_priority: patch.scholarship_priority,
+      target_country: patch.target_country,
+      resume_file_url: patch.resume_file_url,
+      parsed_resume_json: patch.parsed_resume_json,
+      extracted_skills: patch.extracted_skills,
+      extracted_projects: patch.extracted_projects,
+      extracted_internships: patch.extracted_internships,
+      profile_completeness_score: patch.profile_completeness_score,
+      enrichment_status: patch.enrichment_status,
+      last_enriched_at: patch.last_enriched_at,
+      updated_at: now,
+    })
+    .where(eq(student_profiles.user_id, userId))
+    .returning();
+
+  const row = rows[0];
+  if (!row) {
+    throw new Error("applyProfileIntelligenceEnrichment: profile row not found");
+  }
+  return mapProfileRow(row);
+}
+
+/** Legacy score-upgrade free-form fields → aspiration trail (additive). */
+export async function appendProfileNotesBlock(
+  userId: string,
+  block: string
+): Promise<void> {
+  const now = new Date().toISOString();
+  const rows = await db
+    .select({ aspiration_text: student_profiles.aspiration_text })
+    .from(student_profiles)
+    .where(eq(student_profiles.user_id, userId))
+    .limit(1);
+  const prior = rows[0]?.aspiration_text?.trim() ?? "";
+  const next = prior
+    ? `${prior}\n\n— Earlier profile notes —\n\n${block}`
+    : block;
+
+  await db
+    .update(student_profiles)
+    .set({ aspiration_text: next, updated_at: now })
     .where(eq(student_profiles.user_id, userId));
 }

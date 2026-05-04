@@ -78,6 +78,20 @@ export interface StudentProfile {
   ielts_score: number | null;
   toefl_score: number | null;
   parent_contact_email: string | null;
+  /** Storage path in the profile resume bucket (see upload API). */
+  resume_file_url: string | null;
+  aspiration_text: string | null;
+  five_year_goal: string | null;
+  dream_role: string | null;
+  parsed_resume_json: Record<string, unknown>;
+  extracted_skills: string[];
+  extracted_projects: unknown[];
+  extracted_internships: unknown[];
+  /** Current priority focus (prestige, salary, scholarship, affordability, fastest_placement, or short free text). */
+  scholarship_priority: string | null;
+  profile_completeness_score: number;
+  enrichment_status: string | null;
+  last_enriched_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -446,6 +460,12 @@ export interface UserProfileContext {
   current_academic_level: string;
   journey_stage: JourneyStage;
   risk_label: RiskLabel | null;
+  /** Unified intelligence — optional until enrichment completes. */
+  aspiration_summary?: string | null;
+  dream_role?: string | null;
+  career_priority?: string | null;
+  profile_completeness_score?: number | null;
+  top_skills_preview?: string | null;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -486,6 +506,11 @@ export interface NBFCApplicationListItem {
   status: LoanApplicationStatus;
   submitted_at: string;
   document_completeness_pct: number;
+  /** Desk heuristics from profile + risk + docs (not extra DB columns). */
+  roi_payback_years?: number;
+  scholarship_dependency?: "high" | "medium" | "low" | "unknown";
+  candidate_quality?: "strong" | "watch" | "elevated_risk";
+  repayment_confidence_pct?: number;
 }
 
 export interface NBFCPortfolioData {

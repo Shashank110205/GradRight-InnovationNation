@@ -1,15 +1,16 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText, type ModelMessage } from "ai";
 
-import { resolveGeminiApiKey } from "@/lib/ai/resolve-gemini-api-key";
+import type { GeminiEngineId } from "@/lib/ai/env";
+import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
 import type { UserProfileContext } from "@/lib/types";
 
 function getGeminiModelId(): string {
   return process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
 }
 
-function getGoogleProvider() {
-  const apiKey = resolveGeminiApiKey();
+function getGoogleProvider(engine: GeminiEngineId = "dashboard") {
+  const apiKey = getGeminiApiKeyForEngine(engine);
   if (!apiKey) {
     return null;
   }
@@ -22,12 +23,14 @@ function getGoogleProvider() {
  */
 export function streamMentorConversation(
   systemPrompt: string,
-  messages: ModelMessage[]
+  messages: ModelMessage[],
+  options?: { engine?: GeminiEngineId }
 ) {
-  const google = getGoogleProvider();
+  const engine = options?.engine ?? "dashboard";
+  const google = getGoogleProvider(engine);
   if (!google) {
     throw new Error(
-      "Gemini API key is not set (GEMINI_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY, or GOOGLE_API_KEY)"
+      "Gemini API key is not set for this engine (set per-engine GEMINI_*_API_KEY or legacy GEMINI_API_KEY)"
     );
   }
 

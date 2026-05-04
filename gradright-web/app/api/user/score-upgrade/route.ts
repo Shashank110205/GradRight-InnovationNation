@@ -1,3 +1,4 @@
+import { appendProfileNotesBlock } from "@/lib/db/queries/student_profiles";
 import { createServerClient } from "@/lib/db/supabase";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { apiError, apiSuccess } from "@/lib/types";
@@ -45,6 +46,27 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(apiError("Complete onboarding first"), { status: 400 });
   }
 
-  void parsed.data;
+  const d = parsed.data;
+  const parts: string[] = [];
+  if (d.preferred_universities?.trim()) {
+    parts.push(`Preferred universities / programs:\n${d.preferred_universities.trim()}`);
+  }
+  if (d.budget_notes?.trim()) {
+    parts.push(`Budget & funding intent:\n${d.budget_notes.trim()}`);
+  }
+  if (d.certifications?.trim()) {
+    parts.push(`Certifications:\n${d.certifications.trim()}`);
+  }
+  if (d.resume_notes?.trim()) {
+    parts.push(`Resume highlights:\n${d.resume_notes.trim()}`);
+  }
+  if (d.target_geography?.trim()) {
+    parts.push(`Target geography nuance:\n${d.target_geography.trim()}`);
+  }
+
+  if (parts.length) {
+    await appendProfileNotesBlock(appUser.id, parts.join("\n\n"));
+  }
+
   return NextResponse.json(apiSuccess({ saved: true }));
 }

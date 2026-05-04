@@ -7,6 +7,7 @@ import { useSupabase } from "@/components/shared/AppProviders";
 import { ApplicationsTable } from "@/components/partner/ApplicationsTable";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { NBFC_DEMO_PIPELINE } from "@/lib/partner/nbfc-demo-leads";
 import type { NBFCApplicationListItem, RiskLabel } from "@/lib/types";
 import type { LoanApplicationStatus } from "@/lib/types";
 
@@ -106,6 +107,8 @@ export function ApplicationsPageClient({
     [items.length]
   );
 
+  const showDemo = items.length === 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -198,7 +201,20 @@ export function ApplicationsPageClient({
         {heading}
       </p>
 
-      <ApplicationsTable items={items} />
+      {showDemo ? (
+        <div className="space-y-2">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            No live applications match these filters. Below is a{" "}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
+              synthetic pipeline
+            </span>{" "}
+            so demos still feel like a real intelligence desk.
+          </p>
+          <ApplicationsTable items={NBFC_DEMO_PIPELINE} allowDetailNav={false} />
+        </div>
+      ) : (
+        <ApplicationsTable items={items} />
+      )}
     </div>
   );
 }

@@ -101,6 +101,27 @@ export const student_profiles = pgTable("student_profiles", {
   ielts_score: decimal("ielts_score", { precision: 3, scale: 1 }),
   toefl_score: integer("toefl_score"),
   parent_contact_email: text("parent_contact_email"),
+  resume_file_url: text("resume_file_url"),
+  aspiration_text: text("aspiration_text"),
+  five_year_goal: text("five_year_goal"),
+  dream_role: text("dream_role"),
+  parsed_resume_json: jsonb("parsed_resume_json")
+    .$type<Record<string, unknown>>()
+    .default({}),
+  extracted_skills: jsonb("extracted_skills").$type<string[]>().default([]),
+  extracted_projects: jsonb("extracted_projects")
+    .$type<unknown[]>()
+    .default([]),
+  extracted_internships: jsonb("extracted_internships")
+    .$type<unknown[]>()
+    .default([]),
+  scholarship_priority: text("scholarship_priority"),
+  profile_completeness_score: integer("profile_completeness_score").default(0),
+  enrichment_status: text("enrichment_status").default("none"),
+  last_enriched_at: timestamp("last_enriched_at", {
+    withTimezone: true,
+    mode: "string",
+  }),
   created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
     .defaultNow()
     .notNull(),
