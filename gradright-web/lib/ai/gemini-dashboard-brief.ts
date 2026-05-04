@@ -3,7 +3,7 @@ import type { StudentProfile } from "@/lib/types";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { parseTargetCountries } from "@/lib/types";
 
-import { resolveGeminiApiKey } from "@/lib/ai/resolve-gemini-api-key";
+import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
 
 export type DashboardBrief = {
   headline: string;
@@ -75,7 +75,7 @@ export async function generateDashboardBrief(input: {
 }): Promise<{ brief: DashboardBrief; source: "gemini" | "template" }> {
   const fallback = templateBrief(input);
 
-  const apiKey = resolveGeminiApiKey();
+  const apiKey = getGeminiApiKeyForEngine("dashboard");
   if (!apiKey) {
     return { brief: fallback, source: "template" };
   }

@@ -9,6 +9,7 @@ import {
   Compass,
   Flame,
   GraduationCap,
+  MessageCircle,
   Sparkles,
   Target,
   Wallet,
@@ -39,21 +40,13 @@ import { QuickInsightTile } from "./QuickInsightTile";
 import { WeeklyTasksTile } from "./WeeklyTasksTile";
 
 const MODULE_CARDS = [
-  { title: "Discover", href: MODULE_ROUTES.discover, blurb: "Reach & match schools" },
-  { title: "Plan", href: MODULE_ROUTES.plan, blurb: "Admission predictor" },
-  {
-    title: "Application Timeline",
-    href: "/plan/timeline",
-    blurb: "Deadlines & milestones",
-  },
-  { title: "Finance", href: MODULE_ROUTES.finance, blurb: "EMI & comfort" },
-  { title: "Apply", href: MODULE_ROUTES.apply, blurb: "Loan application" },
+  { title: "Explore", href: MODULE_ROUTES.discover, blurb: "Discover feed & guides" },
+  { title: "Plan", href: MODULE_ROUTES.plan, blurb: "Predictors & timeline" },
+  { title: "Funding", href: MODULE_ROUTES.finance, blurb: "Cost clarity & tools" },
+  { title: "Connect", href: "/connect", blurb: "Mentor & community" },
+  { title: "University explorer", href: "/career/navigator", blurb: "Fit & direction" },
+  { title: "Apply", href: MODULE_ROUTES.apply, blurb: "When you are ready" },
   { title: "Succeed", href: MODULE_ROUTES.succeed, blurb: "Career milestones" },
-  {
-    title: "Career Navigator",
-    href: "/career/navigator",
-    blurb: "Find your best-fit universities with AI",
-  },
 ] as const;
 
 function heroScore(risk: LatestRiskScoreSummary | null): number {
@@ -117,12 +110,52 @@ export function DashboardHomeExperience({
   const financePulse =
     profile?.loan_needed === false ? 78 : profile?.budget_band_usd?.includes("80") ? 62 : 71;
 
+  const newsCaption = (() => {
+    if (!profile) return null;
+    const bits: string[] = [];
+    if (profile.target_country?.trim()) {
+      bits.push(`Leaning toward ${profile.target_country.trim()}`);
+    }
+    if (profile.scholarship_priority?.trim()) {
+      bits.push(`priority: ${profile.scholarship_priority.replace(/_/g, " ")}`);
+    }
+    if (profile.profile_completeness_score && profile.profile_completeness_score > 50) {
+      bits.push(`profile depth ~${profile.profile_completeness_score}%`);
+    }
+    if (!bits.length) return null;
+    return `${bits.join(" · ")} — order adapts to your signals.`;
+  })();
+
   const ctaHref = MODULE_ROUTES[journeyStage];
 
   const placementIntel = useMemo(
     () => parsePlacementIntelFromSnapshot(risk?.input_snapshot),
     [risk?.input_snapshot]
   );
+
+  const profileCompleteness = Math.min(
+    100,
+    Math.max(0, profile?.profile_completeness_score ?? 0)
+  );
+  const targetingLine = (() => {
+    const bits: string[] = [];
+    if (profile?.target_country?.trim()) {
+      bits.push(profile.target_country.trim());
+    }
+    if (profile?.degree_type?.trim()) {
+      bits.push(profile.degree_type.trim());
+    }
+    if (profile?.broad_field?.trim()) {
+      bits.push(profile.broad_field.trim());
+    }
+    if (!bits.length) return null;
+    return `Because you're targeting ${bits.join(" · ")}.`;
+  })();
+  const intakeUrgency = (() => {
+    const intake = profile?.target_intake?.trim();
+    if (!intake) return null;
+    return `Intake signal: ${intake} — align tests, SOP, and funding checkpoints early.`;
+  })();
 
   const weeklyMission = useMemo(() => {
     const next = tasks.find((t) => !completedTaskIds.includes(t.id));
@@ -180,7 +213,7 @@ export function DashboardHomeExperience({
               )}
             >
               <Target className="h-4 w-4 shrink-0" aria-hidden />
-              Improve your score
+              Enrich profile intelligence
             </Link>
             <Link
               href={MODULE_ROUTES.discover}
@@ -190,7 +223,7 @@ export function DashboardHomeExperience({
               )}
             >
               <GraduationCap className="h-4 w-4 shrink-0" aria-hidden />
-              Explore universities
+              Open Explore
             </Link>
             <Link
               href={MODULE_ROUTES.finance}
@@ -200,7 +233,7 @@ export function DashboardHomeExperience({
               )}
             >
               <Wallet className="h-4 w-4 shrink-0" aria-hidden />
-              Check financing readiness
+              Funding readiness
             </Link>
           </div>
         </section>
@@ -242,7 +275,7 @@ export function DashboardHomeExperience({
                 )}
               >
                 <Target className="h-4 w-4" aria-hidden />
-                Improve My Score Accuracy
+                Upgrade profile intelligence
               </Link>
             </div>
           </GlassCard>
@@ -260,14 +293,14 @@ export function DashboardHomeExperience({
               Let&apos;s move <span className="text-gradient">your future</span> forward.
             </h1>
           </div>
-          <button
-            type="button"
+          <Link
+            href="/connect#alerts"
             className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background/70 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md active:scale-95"
-            aria-label="Notifications"
+            aria-label="Notifications and alerts"
           >
             <Bell className="h-4 w-4" />
             <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand-pink ring-2 ring-background" />
-          </button>
+          </Link>
         </header>
 
         <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
@@ -288,6 +321,22 @@ export function DashboardHomeExperience({
                     {country ?? "Destinations"} · {field}
                   </span>
                 </div>
+                <p className="mt-2 text-xs font-medium text-brand-primary">
+                  GradRight understands ~{profileCompleteness}% of your journey
+                  {profileCompleteness >= 72
+                    ? " — strong signal for predictions and funding narratives."
+                    : " — enrich once to unlock sharper predictions everywhere."}
+                </p>
+                {targetingLine ? (
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {targetingLine}
+                  </p>
+                ) : null}
+                {intakeUrgency ? (
+                  <p className="mt-1 text-xs leading-relaxed text-amber-800/90 dark:text-amber-200/90">
+                    {intakeUrgency}
+                  </p>
+                ) : null}
                 <h3 className="mt-3 font-heading text-xl font-semibold leading-snug">
                   You&apos;re tracking in the top {peer}% of similar early profiles.
                 </h3>
@@ -401,12 +450,62 @@ export function DashboardHomeExperience({
           </GlassCard>
         </div>
 
+        <section
+          aria-label="AI quick ask and timeline"
+          className="grid gap-3 md:grid-cols-2"
+        >
+          <GlassCard className="flex flex-col justify-between gap-3 border-brand-primary/20 bg-card/70 p-4 backdrop-blur-sm md:flex-row md:items-center">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                AI quick ask
+              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                Strategic mentor — same brain, different modes by page.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window === "undefined") return;
+                window.dispatchEvent(new Event("gr-open-mentor"));
+              }}
+              className={cn(
+                buttonVariants({ variant: "default", size: "sm" }),
+                "inline-flex shrink-0 gap-2 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-md hover:opacity-95"
+              )}
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+              Ask anything
+            </button>
+          </GlassCard>
+          <GlassCard className="flex flex-col justify-between gap-3 border-border/70 bg-card/70 p-4 backdrop-blur-sm md:flex-row md:items-center">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Timeline alerts
+              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                Deadlines, tests, SOP/LOR, visa — staged checklist.
+              </p>
+            </div>
+            <Link
+              href="/plan/timeline"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "inline-flex shrink-0 gap-2 rounded-xl border-border/80"
+              )}
+            >
+              View timeline
+              <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+            </Link>
+          </GlassCard>
+        </section>
+
         <div className="grid gap-4 md:grid-cols-3">
           <div className="md:col-span-1">
             <QuickInsightTile risk={risk} />
           </div>
           <div className="md:col-span-1">
-            <NewsFeedTile items={newsItems} />
+            <NewsFeedTile items={newsItems} caption={newsCaption} />
           </div>
           <div className="md:col-span-1">
             <WeeklyTasksTile tasks={tasks} completedIds={completedTaskIds} />
@@ -414,8 +513,8 @@ export function DashboardHomeExperience({
         </div>
 
         <section aria-label="Module shortcuts" className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">All modules</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+          <h2 className="text-sm font-semibold text-muted-foreground">Ecosystem shortcuts</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {MODULE_CARDS.map((m) => (
               <Link
                 key={m.title}

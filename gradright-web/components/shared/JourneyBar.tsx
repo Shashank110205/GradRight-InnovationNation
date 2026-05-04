@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 import type { JourneyStage } from "@/lib/types";
 
 const STAGES: { stage: JourneyStage; label: string }[] = [
-  { stage: "discover", label: "Discover" },
+  { stage: "discover", label: "Explore" },
   { stage: "plan", label: "Plan" },
-  { stage: "finance", label: "Finance" },
+  { stage: "finance", label: "Funding" },
   { stage: "apply", label: "Apply" },
   { stage: "succeed", label: "Succeed" },
 ];

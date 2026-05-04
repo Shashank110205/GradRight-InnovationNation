@@ -17,9 +17,9 @@ const COPY: Record<
   { headline: string; line: string; cta: string; icon: typeof Sparkles }
 > = {
   discover: {
-    headline: "Explore reach and match odds for your targets",
-    line: "Open the admission predictor—see safer picks before you lock applications.",
-    cta: "Open admission predictor",
+    headline: "Explore what's possible before you lock targets",
+    line: "Discover feed + guides reduce confusion; then stress-test picks with the admission predictor.",
+    cta: "Open Explore",
     icon: Sparkles,
   },
   plan: {
@@ -29,9 +29,9 @@ const COPY: Record<
     icon: LineChart,
   },
   finance: {
-    headline: "See your career-aware EMI calculation",
-    line: "Stress-test payments on your finance hub.",
-    cta: "Open finance hub",
+    headline: "Build funding confidence without the pressure play",
+    line: "Costs, living velocity, and scholarships first — smart tools when you choose them.",
+    cta: "Open funding hub",
     icon: Wallet,
   },
   apply: {

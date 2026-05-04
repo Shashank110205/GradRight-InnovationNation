@@ -19,7 +19,17 @@ export function StudentProfileSummary({
     );
   }
 
+  const aspirationShort =
+    profile.aspiration_text && profile.aspiration_text.length > 180
+      ? `${profile.aspiration_text.slice(0, 177)}…`
+      : (profile.aspiration_text ?? "");
+
   const rows: [string, string][] = [
+    ["Profile completeness", `${profile.profile_completeness_score ?? 0}%`],
+    ["Scholarship priority", profile.scholarship_priority?.replace(/_/g, " ") ?? "—"],
+    ["Five-year goal", profile.five_year_goal?.trim() || "—"],
+    ["Dream role", profile.dream_role?.trim() || "—"],
+    ["Ambition / notes", aspirationShort.trim() || "—"],
     ["Institute (onboarding)", profile.institute_name ?? "—"],
     ["Institute tier", profile.institute_tier ?? "—"],
     ["Target country", profile.target_country ?? "—"],

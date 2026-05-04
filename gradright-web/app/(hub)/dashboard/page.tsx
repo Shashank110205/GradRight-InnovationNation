@@ -25,13 +25,14 @@ export default async function DashboardPage() {
 
   const userId = ctx.appUser.id;
 
-  const [profile, risk, events, completedTaskIds, badges, newsItems] = await Promise.all([
-    getStudentProfileByUserId(userId),
+  const profile = await getStudentProfileByUserId(userId);
+
+  const [risk, events, completedTaskIds, badges, newsItems] = await Promise.all([
     getLatestRiskScoreByUserId(userId),
     getRecentUserEventsByUserId(userId, 8),
     getCompletedWeeklyTaskIds(userId),
     getUserBadgesDistinct(userId),
-    getCachedDashboardNews(),
+    getCachedDashboardNews(profile),
   ]);
 
   const tasks = buildWeeklyTasks(profile, ctx.appUser.journey_stage);

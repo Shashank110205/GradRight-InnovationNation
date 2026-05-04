@@ -23,7 +23,7 @@ function legacyAuthRedirect(pathname: string, search: string): string | null {
   if (pathname === "/login") return `/sign-in${search}`;
   if (pathname === "/signup") return `/sign-up${search}`;
   if (pathname === "/financing" || pathname.startsWith("/financing/")) {
-    return `${pathname.replace(/^\/financing/, "/finance")}${search}`;
+    return `${pathname.replace(/^\/financing/, "/funding")}${search}`;
   }
   if (pathname === "/loan" || pathname.startsWith("/loan/")) {
     return `${pathname.replace(/^\/loan/, "/apply")}${search}`;

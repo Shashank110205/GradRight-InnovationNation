@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { ExplainabilityPanel } from "@/components/explainability/ExplainabilityPanel";
 import { GlassCard } from "@/components/shell/GlassCard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -573,16 +574,33 @@ export function AdmissionPredictorClient() {
                 Edit inputs
               </Button>
               <Link
-                href="/finance"
+                href="/funding"
                 className={cn(
                   buttonVariants({ variant: "default", size: "lg" }),
                   "bg-brand-primary text-white hover:bg-brand-primary/90"
                 )}
               >
-                {`Calculate Loan for ${primaryUniLabel}`}
+                Build a calm funding plan
               </Link>
             </div>
           </GlassCard>
+
+          <ExplainabilityPanel
+            resultLabel="Modeled admission chance"
+            resultSummary={`About ${result.admissionProbability}% modeled alignment for ${primaryUniLabel} — illustrative, not a guarantee.`}
+            whyPoints={[
+              "Combines your academic inputs, tests, work/research signals, and how aggressive your target list is versus typical benchmarks.",
+              ...result.keyStrengths.slice(0, 3).map((s) => `Strength signal: ${s}`),
+            ]}
+            improvePoints={[
+              ...result.keyWeaknesses.slice(0, 4).map((w) => `Gap to address: ${w}`),
+              "Add verified profile details (score upgrade) to tighten confidence bands.",
+            ]}
+            nextStepHref="/dashboard/score-upgrade"
+            nextStepLabel="Improve prediction inputs"
+            askExplainSeed={`I'm seeing about ${result.admissionProbability}% on the admission predictor for ${primaryUniLabel}. Walk me through what inputs usually move this number and what the model can't see.`}
+            askChallengeSeed={`Play devil's advocate on my ${result.admissionProbability}% result for ${primaryUniLabel}: what would change this estimate most, and where might I be overconfident?`}
+          />
         </div>
       )}
     </div>

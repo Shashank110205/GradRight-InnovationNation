@@ -570,7 +570,7 @@ export function CareerNavigatorClient() {
 
           <div className="flex justify-center pb-4">
             <Link
-              href="/finance"
+              href="/funding"
               className={cn(
                 buttonVariants({ variant: "default", size: "lg" }),
                 "min-h-11 px-6"

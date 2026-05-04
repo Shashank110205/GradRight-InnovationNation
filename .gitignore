@@ -46,3 +46,14 @@ yarn-error.log*
 
 # Vercel
 **/.vercel/
+
+.cursor/
+tooling/cursor/
+tooling/prompts/
+.cursorrules
+Docs/FORENSIC_DUPLICATE_AUDIT.md
+.cursor/
+tooling/cursor/
+tooling/prompts/
+.cursorrules
+Docs/FORENSIC_DUPLICATE_AUDIT.md

@@ -29,9 +29,114 @@ import type {
   RiskScore,
   StudentProfile,
 } from "@/lib/types";
+import { calculateROI } from "@/lib/utils/calculations";
 import { and, desc, eq, ilike, inArray, ne, or } from "drizzle-orm";
 
 const DOCUMENT_TARGETS_FOR_COMPLETENESS = 6;
+
+type NbfcJoinRow = {
+  id: string;
+  appFullName: string | null;
+  userFullName: string | null;
+  institute: string | null;
+  program: string | null;
+  target_country: string | null;
+  risk_label: string | null;
+  placement_prob_6m: unknown;
+  salary_band_low_lpa: unknown;
+  salary_band_high_lpa: unknown;
+  loan_amount_requested: unknown;
+  status: LoanApplicationStatus;
+  submitted_at: string | null;
+  documents: unknown;
+  scholarship_priority: string | null;
+  loan_needed: boolean | null;
+  profile_completeness_score: number | null;
+};
+
+function buildNbfcListItem(r: NbfcJoinRow): NBFCApplicationListItem {
+  const docs = (r.documents as { kind?: string }[] | null | undefined) ?? [];
+  const completeness = Math.min(
+    100,
+    Math.round((docs.length / DOCUMENT_TARGETS_FOR_COMPLETENESS) * 100)
+  );
+
+  const placement_prob_6m = r.placement_prob_6m
+    ? Number(r.placement_prob_6m)
+    : 0;
+  const salary_band_low_lpa = r.salary_band_low_lpa
+    ? Number(r.salary_band_low_lpa)
+    : 0;
+  const salary_band_high_lpa = r.salary_band_high_lpa
+    ? Number(r.salary_band_high_lpa)
+    : 0;
+  const loan_amount_requested = r.loan_amount_requested
+    ? Number(r.loan_amount_requested)
+    : 0;
+
+  const salMid =
+    salary_band_low_lpa > 0 && salary_band_high_lpa > 0
+      ? (salary_band_low_lpa + salary_band_high_lpa) / 2
+      : 0;
+  const roi_payback_years =
+    loan_amount_requested > 0 && salMid > 0
+      ? calculateROI(loan_amount_requested / 83, salMid, 83).payback_years
+      : undefined;
+
+  const pri = (r.scholarship_priority ?? "").toLowerCase();
+  let scholarship_dependency: NBFCApplicationListItem["scholarship_dependency"] =
+    "unknown";
+  if (pri.includes("scholar") || pri.includes("afford")) {
+    scholarship_dependency = "high";
+  } else if (r.loan_needed === false) {
+    scholarship_dependency = "low";
+  } else if (loan_amount_requested > 0) {
+    scholarship_dependency = "medium";
+  }
+
+  const risk = (r.risk_label ?? "medium") as RiskLabel;
+  const riskMult = risk === "low" ? 1 : risk === "medium" ? 0.85 : 0.65;
+  const profileBoost = Math.min(
+    12,
+    Math.round((r.profile_completeness_score ?? 0) / 9)
+  );
+  const repayment_confidence_pct = Math.min(
+    100,
+    Math.round(
+      completeness * 0.35 +
+        placement_prob_6m * 100 * 0.45 +
+        riskMult * 20 +
+        profileBoost
+    )
+  );
+
+  let candidate_quality: NBFCApplicationListItem["candidate_quality"] = "watch";
+  if (placement_prob_6m >= 0.65 && risk === "low") {
+    candidate_quality = "strong";
+  } else if (risk === "high" || placement_prob_6m < 0.4) {
+    candidate_quality = "elevated_risk";
+  }
+
+  return {
+    id: r.id,
+    applicant_name: r.appFullName ?? r.userFullName ?? "Unknown",
+    institute: r.institute ?? "",
+    program: r.program ?? "",
+    target_country: r.target_country ?? "",
+    risk_label: risk,
+    placement_prob_6m,
+    salary_band_low_lpa,
+    salary_band_high_lpa,
+    loan_amount_requested,
+    status: r.status,
+    submitted_at: r.submitted_at ?? "",
+    document_completeness_pct: completeness,
+    roi_payback_years,
+    scholarship_dependency,
+    candidate_quality,
+    repayment_confidence_pct,
+  };
+}
 
 function toDec(
   v: number | null | undefined
@@ -359,6 +464,9 @@ export async function getNBFCApplications(
         status: loan_applications.status,
         submitted_at: loan_applications.submitted_at,
         documents: loan_applications.documents,
+        scholarship_priority: student_profiles.scholarship_priority,
+        loan_needed: student_profiles.loan_needed,
+        profile_completeness_score: student_profiles.profile_completeness_score,
       })
       .from(loan_applications)
       .innerJoin(users, eq(loan_applications.user_id, users.id))
@@ -385,71 +493,14 @@ export async function getNBFCApplications(
       .limit(fetchLimit)
       .offset(programBucket ? 0 : offset);
 
-    let mapped: NBFCApplicationListItem[] = rows.map((r) => {
-      const docs = r.documents ?? [];
-      const completeness = Math.min(
-        100,
-        Math.round((docs.length / DOCUMENT_TARGETS_FOR_COMPLETENESS) * 100)
-      );
-
-      return {
-        id: r.id,
-        applicant_name: r.appFullName ?? r.userFullName ?? "Unknown",
-        institute: r.institute ?? "",
-        program: r.program ?? "",
-        target_country: r.target_country ?? "",
-        risk_label: (r.risk_label ?? "medium") as RiskLabel,
-        placement_prob_6m: r.placement_prob_6m
-          ? Number(r.placement_prob_6m)
-          : 0,
-        salary_band_low_lpa: r.salary_band_low_lpa
-          ? Number(r.salary_band_low_lpa)
-          : 0,
-        salary_band_high_lpa: r.salary_band_high_lpa
-          ? Number(r.salary_band_high_lpa)
-          : 0,
-        loan_amount_requested: r.loan_amount_requested
-          ? Number(r.loan_amount_requested)
-          : 0,
-        status: r.status,
-        submitted_at: r.submitted_at ?? "",
-        document_completeness_pct: completeness,
-      };
-    });
+    let mapped: NBFCApplicationListItem[] = rows.map((r) =>
+      buildNbfcListItem(r as NbfcJoinRow)
+    );
 
     if (programBucket) {
       mapped = rows
         .filter((r) => classifyProgramType(r.program) === programBucket)
-        .map((r) => {
-          const docs = r.documents ?? [];
-          const completeness = Math.min(
-            100,
-            Math.round((docs.length / DOCUMENT_TARGETS_FOR_COMPLETENESS) * 100)
-          );
-          return {
-            id: r.id,
-            applicant_name: r.appFullName ?? r.userFullName ?? "Unknown",
-            institute: r.institute ?? "",
-            program: r.program ?? "",
-            target_country: r.target_country ?? "",
-            risk_label: (r.risk_label ?? "medium") as RiskLabel,
-            placement_prob_6m: r.placement_prob_6m
-              ? Number(r.placement_prob_6m)
-              : 0,
-            salary_band_low_lpa: r.salary_band_low_lpa
-              ? Number(r.salary_band_low_lpa)
-              : 0,
-            salary_band_high_lpa: r.salary_band_high_lpa
-              ? Number(r.salary_band_high_lpa)
-              : 0,
-            loan_amount_requested: r.loan_amount_requested
-              ? Number(r.loan_amount_requested)
-              : 0,
-            status: r.status,
-            submitted_at: r.submitted_at ?? "",
-            document_completeness_pct: completeness,
-          };
-        });
+        .map((r) => buildNbfcListItem(r as NbfcJoinRow));
       mapped = mapped.slice(offset, offset + limit);
     }
 

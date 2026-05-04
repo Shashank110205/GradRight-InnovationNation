@@ -30,7 +30,43 @@ function statusPill(status: NBFCApplicationListItem["status"]) {
   );
 }
 
-export function ApplicationsTable({ items }: { items: NBFCApplicationListItem[] }) {
+function qualityPill(q: NBFCApplicationListItem["candidate_quality"]) {
+  const styles = {
+    strong: "bg-emerald-500/15 text-emerald-900 dark:text-emerald-100",
+    watch: "bg-slate-500/15 text-slate-800 dark:text-slate-200",
+    elevated_risk: "bg-rose-500/15 text-rose-900 dark:text-rose-100",
+  } as const;
+  const label =
+    q === "strong" ? "Strong" : q === "elevated_risk" ? "Elevated" : "Watch";
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize",
+        styles[q ?? "watch"]
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function scholarshipLabel(
+  d: NBFCApplicationListItem["scholarship_dependency"]
+): string {
+  if (d === "high") return "High";
+  if (d === "low") return "Low";
+  if (d === "medium") return "Med";
+  return "—";
+}
+
+export function ApplicationsTable({
+  items,
+  allowDetailNav = true,
+}: {
+  items: NBFCApplicationListItem[];
+  /** When false (demo rows), skip links to detail pages that would 404. */
+  allowDetailNav?: boolean;
+}) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
@@ -43,7 +79,7 @@ export function ApplicationsTable({ items }: { items: NBFCApplicationListItem[] 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px] text-left text-sm">
+        <table className="w-full min-w-[1180px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
             <tr>
               <th className="px-4 py-3">Applicant</th>
@@ -52,6 +88,10 @@ export function ApplicationsTable({ items }: { items: NBFCApplicationListItem[] 
               <th className="px-4 py-3">Risk</th>
               <th className="px-4 py-3">Placement 6m</th>
               <th className="px-4 py-3">Salary band</th>
+              <th className="px-4 py-3">ROI (yrs)</th>
+              <th className="px-4 py-3">Scholar dep.</th>
+              <th className="px-4 py-3">Quality</th>
+              <th className="px-4 py-3">Repay %</th>
               <th className="px-4 py-3">Submitted</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Docs</th>
@@ -83,6 +123,22 @@ export function ApplicationsTable({ items }: { items: NBFCApplicationListItem[] 
                     row.salary_band_high_lpa
                   )}
                 </td>
+                <td className="px-4 py-3 tabular-nums text-slate-700 dark:text-slate-300">
+                  {row.roi_payback_years != null && row.roi_payback_years > 0
+                    ? `${row.roi_payback_years}`
+                    : "—"}
+                </td>
+                <td className="px-4 py-3 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {scholarshipLabel(row.scholarship_dependency)}
+                </td>
+                <td className="px-4 py-3">
+                  {qualityPill(row.candidate_quality ?? "watch")}
+                </td>
+                <td className="px-4 py-3 tabular-nums text-slate-700 dark:text-slate-300">
+                  {row.repayment_confidence_pct != null
+                    ? `${row.repayment_confidence_pct}%`
+                    : "—"}
+                </td>
                 <td className="px-4 py-3 tabular-nums text-slate-600 dark:text-slate-400">
                   {row.submitted_at
                     ? new Date(row.submitted_at).toLocaleDateString(undefined, {
@@ -95,12 +151,18 @@ export function ApplicationsTable({ items }: { items: NBFCApplicationListItem[] 
                   {row.document_completeness_pct}%
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/nbfc/applications/${row.id}`}
-                    className="font-medium text-slate-900 underline-offset-4 hover:underline dark:text-slate-100"
-                  >
-                    Review
-                  </Link>
+                  {allowDetailNav ? (
+                    <Link
+                      href={`/nbfc/applications/${row.id}`}
+                      className="font-medium text-slate-900 underline-offset-4 hover:underline dark:text-slate-100"
+                    >
+                      Review
+                    </Link>
+                  ) : (
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      Demo row
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

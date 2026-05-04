@@ -1,15 +1,14 @@
 "use client";
 
 import {
+  ChevronDown,
   Compass,
-  FileText,
   LayoutDashboard,
   Map,
   Menu,
-  PanelLeftClose,
   PanelLeft,
-  Rocket,
-  Target,
+  PanelLeftClose,
+  UsersRound,
   Wallet,
   X,
 } from "lucide-react";
@@ -17,6 +16,15 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+import { AppUserMenu } from "@/components/shared/AppUserMenu";
+import {
+  HUB_MOBILE_PRIMARY,
+  HUB_SIDEBAR_SECTIONS,
+  hubSectionIsActive,
+  type HubSidebarSection,
+} from "@/lib/dashboard/module-registry";
+import { cn } from "@/lib/utils";
 
 const STREAK_COOKIE = "gr_streak_checked_ist";
 
@@ -38,18 +46,12 @@ function todayISTYmdClient(): string {
   });
 }
 
-import { AppUserMenu } from "@/components/shared/AppUserMenu";
-import { DASHBOARD_NAV } from "@/lib/dashboard/module-registry";
-import { cn } from "@/lib/utils";
-
-const ICONS = {
+const SIDEBAR_ICONS = {
   layout: LayoutDashboard,
-  target: Target,
   compass: Compass,
   map: Map,
   wallet: Wallet,
-  file: FileText,
-  rocket: Rocket,
+  users: UsersRound,
 } as const;
 
 /** AI SDK chat must not run in the Node/webpack SSR path (breaks dev `__webpack_require__`). */
@@ -60,6 +62,122 @@ const ChatbotToggleLazy = dynamic(
     })),
   { ssr: false }
 );
+
+function SidebarSectionBlock({
+  section,
+  pathname,
+  collapsed,
+  onNavigate,
+  sectionOpen,
+  toggleSection,
+}: {
+  section: HubSidebarSection;
+  pathname: string;
+  collapsed: boolean;
+  onNavigate: () => void;
+  sectionOpen: Record<string, boolean>;
+  toggleSection: (id: string) => void;
+}) {
+  const Icon = SIDEBAR_ICONS[section.icon];
+  const active = hubSectionIsActive(section, pathname);
+  const hasChildren = section.children.length > 0;
+  const open = sectionOpen[section.id] ?? false;
+
+  if (section.id === "home") {
+    const homeActive = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+    return (
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors",
+          homeActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+          collapsed && "justify-center px-0"
+        )}
+        title={collapsed ? section.label : undefined}
+      >
+        <Icon className="size-5 shrink-0 opacity-90" aria-hidden />
+        {!collapsed ? <span>{section.label}</span> : null}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="space-y-0.5">
+      <div
+        className={cn(
+          "flex items-stretch rounded-lg",
+          active && "bg-sidebar-accent/40"
+        )}
+      >
+        <Link
+          href={section.href}
+          onClick={onNavigate}
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-3 rounded-l-lg px-2 py-2 text-sm font-medium transition-colors",
+            active
+              ? "text-sidebar-accent-foreground"
+              : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+            collapsed && "justify-center rounded-lg px-0"
+          )}
+          title={collapsed ? section.label : section.title}
+        >
+          <Icon className="size-5 shrink-0 opacity-90" aria-hidden />
+          {!collapsed ? (
+            <span className="min-w-0 truncate">{section.label}</span>
+          ) : null}
+        </Link>
+        {!collapsed && hasChildren ? (
+          <button
+            type="button"
+            className={cn(
+              "flex w-9 shrink-0 items-center justify-center rounded-r-lg text-sidebar-foreground/70 transition hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+              open && "bg-sidebar-accent/30"
+            )}
+            aria-expanded={open}
+            aria-label={open ? `Collapse ${section.label} links` : `Expand ${section.label} links`}
+            onClick={(e) => {
+              e.preventDefault();
+              toggleSection(section.id);
+            }}
+          >
+            <ChevronDown
+              className={cn("size-4 transition-transform", open && "rotate-180")}
+              aria-hidden
+            />
+          </button>
+        ) : null}
+      </div>
+      {!collapsed && hasChildren && open ? (
+        <ul className="ml-2 space-y-0.5 border-l border-sidebar-border/60 py-1 pl-2">
+          {section.children.map((c) => {
+            const base = c.href.split("#")[0] ?? c.href;
+            const childActive =
+              pathname === base || pathname.startsWith(`${base}/`);
+            return (
+              <li key={`${section.id}:${c.href}:${c.label}`}>
+                <Link
+                  href={c.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "block rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
+                    childActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground"
+                  )}
+                >
+                  {c.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
 
 export function DashboardShell({
   children,
@@ -80,7 +198,21 @@ export function DashboardShell({
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>({});
   const streakRunRef = useRef(false);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setSectionOpen((prev) => {
+        const next = { ...prev };
+        for (const s of HUB_SIDEBAR_SECTIONS) {
+          if (s.id === "home" || s.children.length === 0) continue;
+          if (hubSectionIsActive(s, pathname)) next[s.id] = true;
+        }
+        return next;
+      });
+    });
+  }, [pathname]);
 
   useEffect(() => {
     if (streakRunRef.current) return;
@@ -112,9 +244,12 @@ export function DashboardShell({
     return () => window.clearTimeout(handle);
   }, [router]);
 
+  function toggleSection(id: string) {
+    setSectionOpen((p) => ({ ...p, [id]: !p[id] }));
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Mobile overlay */}
       {mobileOpen ? (
         <button
           type="button"
@@ -167,32 +302,18 @@ export function DashboardShell({
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 p-2" aria-label="Modules">
-          {DASHBOARD_NAV.map((item) => {
-            const Icon = ICONS[item.icon];
-            const active =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={`${item.label}:${item.href}`}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                  collapsed && "justify-center px-0"
-                )}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon className="size-5 shrink-0 opacity-90" aria-hidden />
-                {!collapsed ? <span>{item.label}</span> : null}
-              </Link>
-            );
-          })}
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2" aria-label="Workspace">
+          {HUB_SIDEBAR_SECTIONS.map((section) => (
+            <SidebarSectionBlock
+              key={section.id}
+              section={section}
+              pathname={pathname}
+              collapsed={collapsed}
+              onNavigate={() => setMobileOpen(false)}
+              sectionOpen={sectionOpen}
+              toggleSection={toggleSection}
+            />
+          ))}
         </nav>
       </aside>
 
@@ -219,12 +340,44 @@ export function DashboardShell({
                 {streakDays}d streak
               </span>
             ) : null}
+            <Link
+              href="/connect#community"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground shadow-sm transition hover:bg-muted active:scale-95"
+              aria-label="Community and peer groups"
+              title="Community"
+            >
+              <UsersRound className="size-4" aria-hidden />
+            </Link>
             <AppUserMenu displayName={headerName} email={headerEmail} compact />
           </div>
         </header>
 
-        <main className="flex-1 p-4 pb-28 md:p-6 md:pb-24">{children}</main>
+        <main className="flex-1 p-4 pb-32 md:p-6 md:pb-24">{children}</main>
       </div>
+
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] pt-1 shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.15)] backdrop-blur-md md:hidden"
+        aria-label="Primary"
+      >
+        {HUB_MOBILE_PRIMARY.map((item) => {
+          const Icon = SIDEBAR_ICONS[item.icon];
+          const section = HUB_SIDEBAR_SECTIONS.find((s) => s.id === item.id)!;
+          const active = hubSectionIsActive(section, pathname);
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={cn(
+                "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition-colors",
+                active ? "text-brand-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="size-5 shrink-0 opacity-90" aria-hidden />
+              <span className="truncate px-0.5">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       <ChatbotToggleLazy appUserId={appUserId} />
     </div>
