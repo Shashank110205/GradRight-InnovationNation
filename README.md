@@ -183,6 +183,21 @@ Login → Dashboard → Lead Pipeline → Application Intelligence → Candidate
 
 ---
 
+# Future Innovation:
+## Video KYC + Agentic Loan Processing
+After loan approval:
+### Students will experience:
+- AI-led video onboarding
+- Smart verification
+- Document intelligence
+- Compliance acceleration
+- Reduced manual friction
+
+---
+
+# End Goal:
+### Build the AI infrastructure for the full student financing lifecycle.
+
 ## Local Development
 
 ### Install Dependencies
