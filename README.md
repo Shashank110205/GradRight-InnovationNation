@@ -1,78 +1,190 @@
-# GradRight
+# GradRight — AI-Powered Student Success, Global Education & Financing Ecosystem
 
-**GradRight** is an AI-first study-abroad and education-finance platform for Indian students: guided **onboarding**, **GradRight Score** (risk + placement outlook), a central **dashboard**, **Gemini** mentor chat, and **loan / NBFC** workflows. A separate **partner (NBFC) console** shares the Next.js codebase behind `NEXT_PUBLIC_PORTAL_MODE=nbfc`.
+## Live Demo
+### Student Portal:
+[[Insert Live Vercel Link Here]
+](https://gradright-demo.vercel.app/)
 
-## Monorepo layout
+---
 
-| Path | Role |
-|------|------|
-| [`gradright-web/`](gradright-web/) | Next.js 16 — student journey + partner console |
-| [`gradright-backend/`](gradright-backend/) | Python FastAPI |
-| [`gradright-mobile/`](gradright-mobile/) | Expo scaffold |
-| [`risk-service/`](risk-service/) | Optional Python scoring service (`RISK_ENGINE_URL`) |
-| [`docs/`](docs/) | Architecture, flows, setup, dependency policy, refactor logs |
-| [`tooling/`](tooling/) | Prompts, MCP docs, Cursor notes |
-| [`scripts/`](scripts/) | `verify-environment.mjs`, **`verify-repo.mjs`** |
-| [`pnpm-workspace.yaml`](pnpm-workspace.yaml) + [`package.json`](package.json) | **pnpm workspace** — only Node packages (`gradright-web`, `gradright-mobile`); **one root `pnpm-lock.yaml`** |
+## Overview
+GradRight is a full-stack AI-powered student intelligence and financing ecosystem designed to guide students from uncertainty to confident global education decisions.
 
-Python services are **not** in the pnpm workspace; use pip/uv per package README.
+The platform solves fragmented student journeys by combining:
 
-## Student flow (canonical URLs)
+- Career discovery
+- University exploration
+- Admission readiness
+- Scholarship intelligence
+- Financial planning
+- Loan readiness
+- Personalized AI mentorship
+- NBFC credit intelligence
 
-1. `/` — Landing  
-2. `/sign-up` → `/onboarding` — First run  
-3. `/dashboard` — Hub  
-4. `/career` → `/discover` → `/plan` → `/finance` → `/apply` → `/succeed` — Modules  
+GradRight transforms the journey from:
 
-**Alternate:** `/` → `/sign-in` → `/dashboard`. Legacy `/login`, `/signup`, `/financing`, `/loan` redirect in middleware.
+### Awareness → Trust → Personalization → Prediction → Financing → Conversion
 
-## NBFC (partner) flow
+---
 
-- Run **`pnpm dev:web:all`** or **`pnpm --dir gradright-web dev:nbfc`** (see web `package.json`).
-- Same `/sign-in` / `/sign-up` routes render **partner** forms when the NBFC portal is active.
-- Console: `/nbfc/applications`, `/nbfc/portfolio`, `/nbfc/settings`.
+## Problem Statement
+Students planning higher education abroad often struggle with disconnected systems for:
 
-Detail: [`docs/FULL_PRODUCT_FLOW.md`](docs/FULL_PRODUCT_FLOW.md).
+- Career planning
+- Country awareness
+- University matching
+- ROI analysis
+- Scholarships
+- SOP/LOR preparation
+- Loan planning
+- Repayment confidence
 
-## Setup (one truth)
+NBFCs also lack early, intelligent visibility into high-potential students before loan application stages.
 
-**Always install from the repo root** (single lockfile policy):
+GradRight bridges both sides.
 
+---
+
+## Core Innovation
+
+## Student Ecosystem
+A unified AI-first command center that provides:
+
+### Personalized GradScore
+- Stage-based score intelligence
+- Trust-based scoring
+- Placement probability
+- Admission likelihood
+- ROI estimation
+- Funding readiness
+
+### Explore Ecosystem
+- Career exploration
+- Country guides
+- University explorer
+- Admission guidance
+- Scholarship pathways
+- Financial literacy
+- SOP / LOR support
+
+### Funding Ecosystem
+- Cost planner
+- Scholarship strategy
+- Funding readiness
+- ROI engine
+- Loan awareness
+
+### AI Mentor
+- Personalized strategic mentor
+- Explainable recommendations
+- Profile enrichment
+- Goal clarity
+
+### Community Layer
+- Peer groups
+- Cohort pathways
+- Geography-based connection
+
+---
+
+## NBFC Ecosystem
+A credit intelligence dashboard that enables:
+
+- Student lead discovery
+- Candidate quality analysis
+- Repayment confidence
+- Scholarship dependency visibility
+- Funnel progression
+- Portfolio intelligence
+- Human-in-loop review
+
+---
+
+## Key Features
+
+### AI + Intelligence
+- Unified student master profile
+- Resume intelligence parsing
+- Aspiration enrichment
+- Explainability engine
+- Personalized dashboard intelligence
+- Predictive profile evolution
+
+### Product Experience
+- Landing awareness
+- Progressive onboarding
+- WOW score reveal
+- Dashboard command center
+- Deep profile upgrade
+- Explore + Funding ecosystems
+- NBFC intelligence console
+
+---
+
+## Tech Stack
+
+### Frontend
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+
+### Backend
+- Python
+- FastAPI
+- Supabase
+- PostgreSQL
+- Drizzle ORM
+
+### AI / Data
+- Modular AI engine architecture
+- Resume parsing
+- Predictive scoring
+- Profile intelligence
+- Explainability systems
+
+### Deployment
+- Vercel
+
+---
+
+## Product Architecture
+GradRight follows a modular intelligence system:
+
+### Student Layer
+Onboarding → Profile → Dashboard → Explore → Funding → Conversion
+
+### Intelligence Layer
+Scoring Engine → Profile Engine → Explore Engine → Funding Engine → DataOps Engine
+
+### NBFC Layer
+Lead Intelligence → Risk Signals → Conversion Funnel → Portfolio
+
+---
+
+## User Journey
+### Student:
+Landing → Sign Up → Onboarding → WOW Moment → Dashboard → Explore → Funding → Loan Readiness
+
+### NBFC:
+Login → Dashboard → Lead Pipeline → Application Intelligence → Candidate Conversion
+
+---
+
+## Why GradRight Is Different
+### Unlike generic platforms:
+- Awareness-first, not loan-first
+- Trust before monetization
+- Explainable intelligence
+- Personalized ecosystem
+- Student + lender dual architecture
+- Retention-focused design
+- Production-grade modularity
+
+---
+
+## Local Development
+
+### Install Dependencies
 ```bash
 pnpm install
-cp gradright-web/.env.example gradright-web/.env.local   # then edit
-pnpm dev:web
-# or both student + NBFC dev servers:
-pnpm dev:web:all
-```
-
-- **Prerequisites:** Node 20+, pnpm 9+, Python 3.11+ for backend — [`docs/implementation/PROJECT_SETUP.md`](docs/implementation/PROJECT_SETUP.md)  
-- **Workspace / types / lockfile rules:** [`docs/DEPENDENCY_POLICY.md`](docs/DEPENDENCY_POLICY.md), [`docs/DEVELOPER_SETUP.md`](docs/DEVELOPER_SETUP.md)
-
-Do **not** rely on `gradright-web/pnpm-lock.yaml` (removed); use the **root** lockfile only.
-
-## Verify & build
-
-```bash
-pnpm verify:repo     # structural + tsc + web architecture guards (use before PRs)
-pnpm typecheck:web   # tsc only
-pnpm build:web       # production Next build
-pnpm lint:web
-```
-
-See [`docs/BUILD_AND_VERIFY.md`](docs/BUILD_AND_VERIFY.md). Optional: `node scripts/verify-environment.mjs` (Node/Python presence).
-
-## Contributing
-
-1. Branch from `main`  
-2. Run **`pnpm verify:repo`**  
-3. Never commit `.env`, `.env.local`, `node_modules`, `.next`, or Python `venv/`  
-
-## Security & shipping
-
-- [`docs/SECURITY_PRE_PUSH_CHECKLIST.md`](docs/SECURITY_PRE_PUSH_CHECKLIST.md)  
-- Product / implementation specs under [`docs/product/`](docs/product/) and [`docs/implementation/`](docs/implementation/)
-
-## License
-
-Proprietary — All Rights Reserved (unless and until a license file is added).
