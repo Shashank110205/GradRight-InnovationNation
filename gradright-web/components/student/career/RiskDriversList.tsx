@@ -24,7 +24,7 @@ export function RiskDriversList({ drivers }: { drivers: RiskDriver[] }) {
   return (
     <Card size="sm">
       <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-base">What&apos;s shaping your score</CardTitle>
+        <CardTitle className="text-base">What&apos;s shaping your outlook</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 pt-4 sm:grid-cols-3">
         {top.map((d) => (

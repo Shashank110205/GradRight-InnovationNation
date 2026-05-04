@@ -109,6 +109,22 @@ export async function ensureUserFromAuth(auth: {
   }
 }
 
+export async function getUserById(id: string): Promise<User | null> {
+  try {
+    const rows = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    const row = rows[0];
+    return row ? mapUserRow(row) : null;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[getUserById] query_failed", { id, message: msg });
+    return null;
+  }
+}
+
 export async function getUserBySupabaseUID(uid: string): Promise<User | null> {
   try {
     const rows = await db

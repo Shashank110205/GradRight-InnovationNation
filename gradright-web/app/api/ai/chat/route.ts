@@ -6,10 +6,12 @@ import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
 import type { MentorMode } from "@/lib/ai/mentor-mode";
 import { buildMentorSystemPrompt } from "@/lib/ai/prompts/mentor";
 import { streamMentorConversation } from "@/lib/ai/gemini-chat";
+import { buildStudentMasterProfile } from "@/lib/profile/student-master-profile";
 import { createServerClient } from "@/lib/db/supabase";
 import { getLatestRiskScoreByUserId } from "@/lib/db/queries/risk_scores";
 import { getStudentProfileByUserId } from "@/lib/db/queries/student_profiles";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
+import { GRADRIGHT_AI_FALLBACK_MESSAGE } from "@/lib/ai/psychology-layer";
 import { enforceAiChatRateLimit } from "@/lib/rate-limit/ai-chat";
 import type { UserProfileContext } from "@/lib/types";
 
@@ -30,6 +32,29 @@ const chatPostBodySchema = z.object({
   mentor_mode: mentorModeSchema.optional(),
 });
 
+function lastUserTextFromUiMessages(messages: UIMessage[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || m.role !== "user") continue;
+    const parts = (m as { parts?: unknown }).parts;
+    if (!Array.isArray(parts)) continue;
+    const chunks: string[] = [];
+    for (const p of parts) {
+      if (
+        p &&
+        typeof p === "object" &&
+        (p as { type?: string }).type === "text" &&
+        typeof (p as { text?: string }).text === "string"
+      ) {
+        chunks.push((p as { text: string }).text);
+      }
+    }
+    const joined = chunks.join(" ").trim();
+    if (joined) return joined;
+  }
+  return null;
+}
+
 function buildUserProfileContext(input: {
   appUser: NonNullable<Awaited<ReturnType<typeof getUserBySupabaseUID>>>;
   profile: Awaited<ReturnType<typeof getStudentProfileByUserId>>;
@@ -47,6 +72,11 @@ function buildUserProfileContext(input: {
     p?.extracted_skills?.length && p.extracted_skills.length > 0
       ? p.extracted_skills.slice(0, 6).join(", ")
       : null;
+  let cgpa_display: string | null = null;
+  if (p?.cgpa != null && Number.isFinite(p.cgpa)) {
+    const scale = p.cgpa_scale ?? 10;
+    cgpa_display = `${p.cgpa} / ${scale}`;
+  }
   return {
     first_name: first,
     target_country: p?.target_country?.trim() || "not set",
@@ -62,6 +92,8 @@ function buildUserProfileContext(input: {
     career_priority: p?.scholarship_priority?.trim() || null,
     profile_completeness_score: p?.profile_completeness_score ?? null,
     top_skills_preview,
+    cgpa_display,
+    budget_band_display: p?.budget_band_usd?.trim() || null,
   };
 }
 
@@ -113,15 +145,13 @@ export async function POST(req: Request): Promise<Response> {
 
   const engine = mentorModeToEngine(mentor_mode);
   if (!getGeminiApiKeyForEngine(engine)) {
-    return new Response(
-      "Chat is not configured: set GEMINI_DASHBOARD_API_KEY (or the engine-specific key, or legacy GEMINI_API_KEY) in .env.local.",
-      { status: 503 }
-    );
+    return new Response(GRADRIGHT_AI_FALLBACK_MESSAGE, { status: 503 });
   }
 
-  const [profile, risk] = await Promise.all([
+  const [profile, risk, master] = await Promise.all([
     getStudentProfileByUserId(appUser.id),
     getLatestRiskScoreByUserId(appUser.id),
+    buildStudentMasterProfile(appUser.id),
   ]);
 
   const profileContext = buildUserProfileContext({
@@ -129,7 +159,10 @@ export async function POST(req: Request): Promise<Response> {
     profile,
     risk,
   });
-  const system = buildMentorSystemPrompt(profileContext, mentor_mode);
+  const lastUserMessage = lastUserTextFromUiMessages(uiMessages);
+  const system = buildMentorSystemPrompt(profileContext, mentor_mode, master, {
+    lastUserMessage,
+  });
 
   const modelMessages = await convertToModelMessages(
     uiMessages.map(({ id: _id, ...rest }) => rest)

@@ -1,5 +1,6 @@
 "use client";
 
+import { GRADRIGHT_AI_FALLBACK_MESSAGE } from "@/lib/ai/psychology-layer";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
@@ -57,36 +58,36 @@ function mentorChrome(mode: MentorMode): {
 } {
   if (mode === "discover") {
     return {
-      title: "Discover AI",
+      title: "GradRight Explore Intelligence",
       description:
-        "Awareness-first answers: country fit, requirements myths, and roadmap questions.",
-      fabLabel: "Open Discover AI",
+        "Country fit, university logic, admissions myths, and pathway questions — personalized to your profile.",
+      fabLabel: "Open Explore Intelligence",
       useDiscoverIcon: true,
     };
   }
   if (mode === "result") {
     return {
-      title: "Result mentor",
+      title: "GradRight Funding Intelligence",
       description:
-        "Explain or challenge model outputs — plain language, no invented percentages.",
-      fabLabel: "Open result mentor",
+        "Cost, ROI, readiness, and calm financing literacy — aligned with your plan.",
+      fabLabel: "Open Funding Intelligence",
       useDiscoverIcon: false,
     };
   }
   if (mode === "profile") {
     return {
-      title: "Profile mentor",
+      title: "GradRight Profile Intelligence",
       description:
-        "Short, adaptive questions to deepen your profile and sharpen predictions.",
-      fabLabel: "Open profile mentor",
+        "Short, adaptive prompts so GradRight remembers you accurately across the product.",
+      fabLabel: "Open Profile Intelligence",
       useDiscoverIcon: false,
     };
   }
   return {
-    title: "GradRight AI mentor",
+    title: "GradRight Mentor",
     description:
-      "Strategic guidance across your journey — funding stays optional until you’re ready.",
-    fabLabel: "Open AI mentor",
+      "Your dashboard command center — missions, blockers, score story, and next best moves.",
+    fabLabel: "Open GradRight Mentor",
     useDiscoverIcon: false,
   };
 }
@@ -110,6 +111,7 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [transportError, setTransportError] = useState<string | null>(null);
 
   const transport = useMemo(
     () =>
@@ -130,6 +132,9 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
   const { messages, sendMessage, status, setMessages } = useChat({
     id: "gradright-dashboard",
     transport,
+    onError: () => {
+      setTransportError(GRADRIGHT_AI_FALLBACK_MESSAGE);
+    },
   });
 
   useEffect(() => {
@@ -198,6 +203,11 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
 
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+              {transportError ? (
+                <p className="rounded-xl border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                  {transportError}
+                </p>
+              ) : null}
               {messages.length === 0 ? (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">Try one of these:</p>
@@ -207,7 +217,10 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
                         key={s}
                         type="button"
                         disabled={busy}
-                        onClick={() => sendMessage({ text: s })}
+                        onClick={() => {
+                          setTransportError(null);
+                          sendMessage({ text: s });
+                        }}
                         className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-left text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
                       >
                         {s}
@@ -247,6 +260,7 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
                 e.preventDefault();
                 const t = input.trim();
                 if (!t || busy) return;
+                setTransportError(null);
                 sendMessage({ text: t });
                 setInput("");
               }}

@@ -1,4 +1,5 @@
 import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
+import { GRADRIGHT_AI_FALLBACK_MESSAGE } from "@/lib/ai/psychology-layer";
 import { createServerClient } from "@/lib/db/supabase";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { enforceAiChatRateLimit } from "@/lib/rate-limit/ai-chat";
@@ -84,7 +85,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(
       apiSuccess({
         advance: true,
-        assistant_message: undefined,
+        assistant_message: GRADRIGHT_AI_FALLBACK_MESSAGE,
       })
     );
   }
@@ -99,7 +100,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     },
   });
 
-  const prompt = `You are GradRight's profile coach. The student is in a structured profile flow.
+  const prompt = `You are GradRight Profile Intelligence coach. Tone: warm, never shaming; redirect off-topic with premium calm.
+The student is in a structured profile flow.
 Current step id: ${step}
 The official question we need answered:
 """${prior_question}"""
@@ -110,7 +112,7 @@ Student message:
 Return ONLY JSON: { "advance": boolean, "assistant_message"?: string }
 Rules:
 - advance=true if the message reasonably answers the question OR is a short greeting/small-talk that we can acknowledge and still move on.
-- advance=false if the message is clearly unrelated (movies, games, random trivia) — then assistant_message must politely redirect them to the previous question (one short paragraph).
+- advance=false if the message is clearly unrelated (movies, games, random trivia) — then assistant_message must redirect: you're here to strengthen their GradRight profile; one short warm paragraph, back to the question.
 - If advance=false, assistant_message is required.
 - Never ask a new unrelated question; keep them on the current step.`;
 

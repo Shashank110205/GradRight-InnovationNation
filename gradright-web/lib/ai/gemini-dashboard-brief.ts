@@ -11,12 +11,14 @@ export type DashboardBrief = {
   focusAreas: string[];
 };
 
-const SYSTEM = `You are GradRight's product copywriter. Write concise, encouraging dashboard copy for Indian students planning graduate study abroad.
+const SYSTEM = `You are GradRight's dashboard intelligence copywriter. Write concise, encouraging copy for Indian students planning graduate study abroad.
+Psychology: reduce fear and overwhelm; increase clarity, trust, and next-step confidence. Never doom, never elitism, never predatory financing tone.
 Rules:
 - Tone: warm, confident, not hype; no guarantees about admissions, salaries, or loans.
 - Reference their actual destinations, field, and degree when provided.
+- Prefer human language over jargon; if you reference tension, use "pressure zone" framing, not alarm.
 - Output ONLY valid JSON, no markdown, with keys: headline (max 12 words), subline (max 28 words), focusAreas (array of 3-4 short strings, action-oriented).
-- Align with GradRight themes: journey planning, career risk awareness, financing literacy.`;
+- Align with GradRight themes: journey planning, placement pressure awareness (gentle), financing literacy without selling loans.`;
 
 function templateBrief(input: {
   profile: StudentProfile | null;
@@ -96,6 +98,9 @@ export async function generateDashboardBrief(input: {
           target_intake: input.profile.target_intake,
           budget_band_usd: input.profile.budget_band_usd,
           loan_needed: input.profile.loan_needed,
+          profile_completeness_score: input.profile.profile_completeness_score,
+          dream_role: input.profile.dream_role,
+          enrichment_status: input.profile.enrichment_status,
         }
       : null,
     risk: input.risk

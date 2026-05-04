@@ -97,7 +97,7 @@ export function CareerRiskGenerateForm({
     >
       <div>
         <h2 className="font-heading text-lg font-semibold text-foreground">
-          Generate your risk score
+          Generate your GradScore outlook
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           We combine your profile with the placement rule engine, then add a short

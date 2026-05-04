@@ -216,7 +216,9 @@ export function GradRightScoreScreen({
           </motion.section>
 
           <motion.section variants={fadeUp} className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Risk note</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Placement pressure zone
+            </h3>
             <p
               className={cn(
                 "text-sm leading-relaxed md:text-base",
