@@ -2,10 +2,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
 import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
+import { GRADRIGHT_AI_FALLBACK_MESSAGE } from "@/lib/ai/psychology-layer";
 import type { StudentProfile } from "@/lib/types";
 
 const resumeParseSchema = z.object({
   headline_summary: z.string().optional(),
+  competitiveness_band: z
+    .enum(["developing", "competitive", "strong"])
+    .optional(),
+  competitiveness_note: z.string().max(500).optional(),
   skills: z.array(z.string()).default([]),
   projects: z
     .array(
@@ -94,7 +99,7 @@ export async function runProfileEngine(
         projects: [],
         internships: [],
         strengths: [],
-        gaps: ["Profile AI is not configured yet — ask your admin to add the profile engine key."],
+        gaps: [GRADRIGHT_AI_FALLBACK_MESSAGE],
       },
     };
   }
@@ -132,7 +137,8 @@ export async function runProfileEngine(
     input.regions_text ?? "",
   ].join("\n");
 
-  const instruction = `You are GradRight's PROFILE intelligence engine. Merge resume content (if any) with the student's stated aspirations.
+  const instruction = `You are GradRight Profile Intelligence — identity + growth architect. Merge resume content (if any) with the student's stated aspirations.
+Psychology: never shame; frame gaps as "growth unlocks" and limits as "current limitations"; competitiveness notes must be realistic but reassuring (no doom).
 Return ONLY valid JSON matching this shape:
 {
   "profile_completeness_score": number (0-100, holistic),
@@ -144,6 +150,8 @@ Return ONLY valid JSON matching this shape:
     "internships": { "org": string, "role"?: string, "duration"?: string }[],
     "strengths": string[],
     "gaps": string[],
+    "competitiveness_band"?: "developing" | "competitive" | "strong",
+    "competitiveness_note"?: string,
     "goal_vectors": { "geography_focus"?: string[], "role_focus"?: string[], "scholarship_weight_0_to_1"?: number }
   }
 }
@@ -151,7 +159,9 @@ Rules:
 - If resume text is missing or unusable, still infer what you can from aspirations; set enrichment_status "partial" when inference is thin.
 - profile_completeness_score should rise meaningfully when skills/projects exist and aspirations are concrete.
 - Never invent employers or schools not implied by the inputs; prefer empty arrays over hallucination.
-- scholarship_weight_0_to_1 should reflect how much the student prioritizes scholarships (from priority + text).`;
+- scholarship_weight_0_to_1 should reflect how much the student prioritizes scholarships (from priority + text).
+- competitiveness_band + competitiveness_note: honest, non-alarmist estimate vs typical applicants for stated degree/field (no admission guarantees).
+- "gaps" array items should read like constructive growth unlocks, not attacks.`;
 
   try {
     const parts: Array<
@@ -207,9 +217,7 @@ Rules:
         projects: [],
         internships: [],
         strengths: [],
-        gaps: [
-          "We could not fully parse this round. You can retry or paste a shorter resume summary.",
-        ],
+        gaps: [GRADRIGHT_AI_FALLBACK_MESSAGE],
       },
     };
   }

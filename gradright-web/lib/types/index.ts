@@ -466,6 +466,9 @@ export interface UserProfileContext {
   career_priority?: string | null;
   profile_completeness_score?: number | null;
   top_skills_preview?: string | null;
+  /** e.g. "8.2 / 10" for mentor grounding */
+  cgpa_display?: string | null;
+  budget_band_display?: string | null;
 }
 
 // ═══════════════════════════════════════════════════════════════

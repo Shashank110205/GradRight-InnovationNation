@@ -19,7 +19,7 @@ export function AskAiArticleButton({ seed }: { seed: string }) {
         );
       }}
     >
-      Ask AI about this
+      Ask GradRight AI
     </button>
   );
 }

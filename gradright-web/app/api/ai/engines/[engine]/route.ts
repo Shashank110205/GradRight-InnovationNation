@@ -1,9 +1,13 @@
 import { describeDashboardEngine } from "@/lib/ai/engines/dashboard-engine";
-import { describeDataopsEngine } from "@/lib/ai/engines/dataops-engine";
+import {
+  describeDataopsEngine,
+  simulateDataOpsSignals,
+} from "@/lib/ai/engines/dataops-engine";
 import { describeExploreEngine } from "@/lib/ai/engines/explore-engine";
 import { describeFundingEngine } from "@/lib/ai/engines/funding-engine";
 import { describeProfileEngine } from "@/lib/ai/engines/profile-engine";
 import { getGeminiEngineKeyPresence } from "@/lib/ai/env";
+import { buildStudentMasterProfile } from "@/lib/profile/student-master-profile";
 import { createServerClient } from "@/lib/db/supabase";
 import { getStudentProfileByUserId } from "@/lib/db/queries/student_profiles";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
@@ -70,6 +74,7 @@ export async function GET(
   }
 
   const profile = await getStudentProfileByUserId(appUser.id);
+  const master = await buildStudentMasterProfile(appUser.id);
   const keys = getGeminiEngineKeyPresence();
 
   const snapshot = profile
@@ -86,6 +91,22 @@ export async function GET(
       }
     : null;
 
+  const master_digest = master
+    ? {
+        pathway: master.pathway,
+        intelligence: master.intelligence,
+        risk_label: master.risk?.risk_label ?? null,
+        extracted_counts: {
+          skills: master.extracted.skills.length,
+          projects: master.extracted.projects.length,
+          internships: master.extracted.internships.length,
+        },
+      }
+    : null;
+
+  const dataops_preview =
+    engine === "dataops" && master ? simulateDataOpsSignals(master) : null;
+
   return NextResponse.json(
     apiSuccess({
       engine,
@@ -93,6 +114,8 @@ export async function GET(
       policy: engine === "profile" ? "writes_via_profile_enrich_only" : "read_only",
       gemini_key_configured: keys[engine],
       profile_snapshot: snapshot,
+      master_digest,
+      dataops_preview,
     })
   );
 }

@@ -2,7 +2,9 @@
 export type MentorMode = "dashboard" | "discover" | "result" | "profile";
 
 export function resolveMentorMode(pathname: string): MentorMode {
-  if (pathname.startsWith("/explore")) return "discover";
+  if (pathname.startsWith("/explore") || pathname.startsWith("/discover")) {
+    return "discover";
+  }
   if (pathname.startsWith("/dashboard/score-upgrade")) return "profile";
   if (pathname.startsWith("/plan/admission") || pathname.startsWith("/funding")) {
     return "result";

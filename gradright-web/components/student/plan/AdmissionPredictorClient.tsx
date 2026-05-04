@@ -553,7 +553,7 @@ export function AdmissionPredictorClient() {
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Weaknesses
+                    Growth unlocks
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {result.keyWeaknesses.map((t, i) => (
@@ -593,13 +593,13 @@ export function AdmissionPredictorClient() {
               ...result.keyStrengths.slice(0, 3).map((s) => `Strength signal: ${s}`),
             ]}
             improvePoints={[
-              ...result.keyWeaknesses.slice(0, 4).map((w) => `Gap to address: ${w}`),
+              ...result.keyWeaknesses.slice(0, 4).map((w) => `Growth unlock: ${w}`),
               "Add verified profile details (score upgrade) to tighten confidence bands.",
             ]}
             nextStepHref="/dashboard/score-upgrade"
             nextStepLabel="Improve prediction inputs"
             askExplainSeed={`I'm seeing about ${result.admissionProbability}% on the admission predictor for ${primaryUniLabel}. Walk me through what inputs usually move this number and what the model can't see.`}
-            askChallengeSeed={`Play devil's advocate on my ${result.admissionProbability}% result for ${primaryUniLabel}: what would change this estimate most, and where might I be overconfident?`}
+            askChallengeSeed={`From a strategic perspective on my ${result.admissionProbability}% outlook for ${primaryUniLabel}: what would change this estimate most, and where should I stay humble?`}
           />
         </div>
       )}

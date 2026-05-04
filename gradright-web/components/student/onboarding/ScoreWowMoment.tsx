@@ -43,7 +43,7 @@ export function ScoreWowMoment({
     {
       icon: LineChart,
       title: "Your trajectory",
-      body: `Early outlook: ${score.risk_label} risk band · indicative ₹${score.salary_band_low_lpa}–${score.salary_band_high_lpa} LPA — not a promise, just a directional snapshot.`,
+      body: `Early outlook: ${score.risk_label} placement-pressure band (a starting benchmark, not a ceiling) · indicative ₹${score.salary_band_low_lpa}–${score.salary_band_high_lpa} LPA — not a promise, just a directional snapshot.`,
       accent: "from-violet-500/15 to-brand-secondary/10",
     },
     {
