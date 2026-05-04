@@ -2,7 +2,7 @@
 
 ## Live Demo
 ### Student Portal:
-[[Insert Live Vercel Link Here]
+[[Click Here for the Live Deployed Link]
 ](https://gradright-demo.vercel.app/)
 
 ---
