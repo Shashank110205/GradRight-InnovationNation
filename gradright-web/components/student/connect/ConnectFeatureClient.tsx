@@ -14,12 +14,6 @@ export function ConnectFeatureClient() {
   const peers = useFeatureApi<Record<string, unknown>>("peers");
   const updates = useFeatureApi<Record<string, unknown>>("notifications");
 
-  const communityHighlights = Array.isArray(community.data?.highlights)
-    ? (community.data?.highlights as string[])
-    : [];
-  const communityContext =
-    typeof community.data?.note === "string" ? (community.data.note as string) : undefined;
-
   const peerGroups = Array.isArray(peers.data?.peer_groups_preview)
     ? (peers.data?.peer_groups_preview as Array<{ lens?: string; example?: string }>)
     : [];
@@ -68,10 +62,7 @@ export function ConnectFeatureClient() {
       </section>
 
       <section id="community" className="scroll-mt-24">
-        <CommunityChatPreview
-          profileContext={communityContext}
-          communityHighlights={communityHighlights}
-        />
+        <CommunityChatPreview />
       </section>
 
       <section id="peers" className="scroll-mt-24">

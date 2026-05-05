@@ -203,7 +203,7 @@ export function CareerPageClient({
           </div>
 
           <ExplainabilityPanel
-            variant="career"
+            variant="admission"
             resultLabel="Placement readiness score"
             resultSummary={`Current readiness is ${Math.round(score.risk_score_raw)} with ${Math.round(
               score.placement_prob_6m * 100
