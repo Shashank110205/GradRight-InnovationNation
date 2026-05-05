@@ -117,6 +117,12 @@ export const student_profiles = pgTable("student_profiles", {
     .default([]),
   scholarship_priority: text("scholarship_priority"),
   profile_completeness_score: integer("profile_completeness_score").default(0),
+  risk_appetite: text("risk_appetite"),
+  career_path_clarity: text("career_path_clarity"),
+  /** Resume-derived or stated total years in industry (complements work_experience_years). */
+  experience_years: integer("experience_years"),
+  /** affordability | prestige | balanced — from profile intelligence tradeoff step. */
+  funding_value_focus: text("funding_value_focus"),
   enrichment_status: text("enrichment_status").default("none"),
   last_enriched_at: timestamp("last_enriched_at", {
     withTimezone: true,

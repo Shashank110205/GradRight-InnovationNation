@@ -258,6 +258,12 @@ class PlacementRiskScorer:
 
         drivers_sorted = sorted(drivers, key=lambda d: abs(d.weight - 0.5), reverse=True)[:3]
 
+        profile_completeness_score = self._profile_input_completeness(inp)
+        readiness_signals = self._readiness_signals(inp, signals, score_data_coverage_percentage)
+        strengths, improvement_areas = self._strengths_and_gaps(inp, drivers_sorted, final_score)
+        strengths = list(dict.fromkeys(strengths))[:4]
+        improvement_areas = list(dict.fromkeys(improvement_areas))[:4]
+
         return {
             "placement_prob_3m": round(p3m, 2),
             "placement_prob_6m": round(p6m, 2),
@@ -275,7 +281,83 @@ class PlacementRiskScorer:
             "intelligence_source_note": intel_note,
             "score_confidence_user_message": conf_message,
             "normalized_signal_snapshot": {k: v for k, v in vals.items() if v is not None},
+            "profile_completeness_score": profile_completeness_score,
+            "readiness_signals": readiness_signals,
+            "strengths": strengths,
+            "improvement_areas": improvement_areas,
         }
+
+    def _profile_input_completeness(self, inp: ScoreInput) -> int:
+        """How complete the scoring inputs are (not a marketing score)."""
+        pts = 0
+        if inp.institute_tier:
+            pts += 22
+        if inp.cgpa_normalized > 0:
+            pts += 22
+        if inp.internship_months > 0:
+            pts += 18
+        if inp.certification_count > 0:
+            pts += 12
+        if inp.work_experience_years > 0:
+            pts += 12
+        if inp.target_country and inp.target_country != "domestic":
+            pts += 8
+        if inp.target_sector and inp.target_sector != "Other":
+            pts += 6
+        return int(min(100, pts))
+
+    def _readiness_signals(
+        self,
+        inp: ScoreInput,
+        signals: NormalizedPlacementSignals,
+        coverage_pct: float,
+    ) -> dict[str, str]:
+        out: dict[str, str] = {}
+        out["internships"] = "strong" if inp.internship_months >= 6 else ("ok" if inp.internship_months >= 3 else "thin")
+        out["certifications"] = "present" if inp.certification_count > 0 else "missing"
+        out["experience"] = "seasoned" if inp.work_experience_years >= 2 else ("early" if inp.work_experience_years == 0 else "building")
+        out["data_coverage"] = "high" if coverage_pct >= 75 else ("medium" if coverage_pct >= 55 else "low")
+        if signals.historical_placement_score is not None:
+            out["historical_layer"] = "active"
+        else:
+            out["historical_layer"] = "not_in_run"
+        return out
+
+    def _strengths_and_gaps(
+        self,
+        inp: ScoreInput,
+        drivers_sorted: list[RiskDriverInternal],
+        final_score: float,
+    ) -> tuple[list[str], list[str]]:
+        strengths: list[str] = []
+        gaps: list[str] = []
+        if inp.cgpa_normalized >= 0.78:
+            strengths.append("CGPA signal sits in a competitive band for many target programs.")
+        elif inp.cgpa_normalized < 0.62:
+            gaps.append("CGPA narrative may need stronger test scores, coursework, or experience offsets.")
+
+        if inp.internship_months >= 6:
+            strengths.append("Internship depth supports faster employer confidence.")
+        elif inp.internship_months < 3:
+            gaps.append("Internship months are still thin versus typical placement cohorts.")
+
+        if inp.certification_count > 0:
+            strengths.append("Certifications add verifiable skill signals alongside academics.")
+        else:
+            gaps.append("Add at least one credible certification aligned to your target role family.")
+
+        for d in drivers_sorted:
+            if d.direction == "positive" and d.user_friendly_summary:
+                strengths.append(d.user_friendly_summary)
+            elif d.direction == "negative" and d.user_friendly_summary:
+                gaps.append(d.user_friendly_summary)
+
+        if final_score >= 62:
+            strengths.append("Composite placement intelligence is trending supportive for your stated trajectory.")
+        else:
+            gaps.append("Composite score has headroom — prioritize one high-leverage internship or certification cycle.")
+
+        return strengths[:4], gaps[:4]
 
     def _placement_prob(self, score: float, months: int) -> float:
         caps = {3: 0.60, 6: 0.85, 12: 0.95}

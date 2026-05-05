@@ -1,5 +1,6 @@
 import { ApplicationsPageClient } from "@/components/partner/ApplicationsPageClient";
 import { NbfcCommandCenter } from "@/components/partner/NbfcCommandCenter";
+import { NbfcSnapshotCard } from "@/components/partner/NbfcSnapshotCard";
 import { getNBFCApplications } from "@/lib/db/queries/applications";
 import { NBFC_DEMO_PIPELINE } from "@/lib/partner/nbfc-demo-leads";
 import type { LoanApplicationStatus, RiskLabel } from "@/lib/types";
@@ -47,6 +48,7 @@ export default async function NbfcApplicationsPage({
 
   return (
     <div className="space-y-8">
+      <NbfcSnapshotCard items={heroItems} isDemo={showDemo} />
       <NbfcCommandCenter items={heroItems} isDemo={showDemo} />
       <ApplicationsPageClient
         items={items}

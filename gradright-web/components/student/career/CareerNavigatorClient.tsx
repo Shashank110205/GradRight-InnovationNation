@@ -52,7 +52,7 @@ const FLAG: Record<string, string> = {
 };
 
 type ApiPayload = CareerNavigatorResponse & {
-  _meta?: { source: "anthropic" | "fallback" };
+  _meta?: { source: "gemini" | "fallback" };
 };
 
 function difficultyStyles(d: CareerNavigatorResponse["topRecommendations"][0]["admissionDifficulty"]) {

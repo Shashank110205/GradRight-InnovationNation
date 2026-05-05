@@ -1,4 +1,4 @@
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
+import { generateGeminiText } from "@/lib/ai/gemini-text-client";
 
 export type TimelinePhaseColor = "blue" | "amber" | "green" | "red";
 export type MilestonePriority = "high" | "medium" | "low";
@@ -109,7 +109,7 @@ function stripJsonFence(text: string): string {
   return text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
 }
 
-function parseAnthropicTimelineJson(text: string): ApplicationTimelinePayload | null {
+function parseTimelineJson(text: string): ApplicationTimelinePayload | null {
   const cleaned = stripJsonFence(text);
   try {
     const o = JSON.parse(cleaned) as Partial<ApplicationTimelinePayload>;
@@ -226,21 +226,19 @@ export function buildRuleBasedApplicationTimeline(
   };
 }
 
+const TIMELINE_SYSTEM = `You generate structured study-abroad application timelines for Indian students.
+Output ONLY valid JSON (no markdown fences). The JSON must match the schema described in the user message.`;
+
+/** C-003: Application timeline JSON — Gemini `dashboard` key. */
 export async function generateApplicationTimeline(input: ApplicationTimelineInput): Promise<{
   data: ApplicationTimelinePayload;
-  source: "anthropic" | "fallback";
+  source: "gemini" | "fallback";
 }> {
   const fallback = () => ({
     data: buildRuleBasedApplicationTimeline(input),
     source: "fallback" as const,
   });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
-    return fallback();
-  }
-
-  const model = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
   const uniList =
     input.targetUniversities.length > 0
       ? input.targetUniversities.join(", ")
@@ -257,44 +255,23 @@ Rules:
 - totalWeeks should cover from now through intake preparation and arrival.
 - Use realistic ordering: GRE/test prep early, applications mid, visa/loan pre-departure.`;
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 8192,
-        messages: [
-          {
-            role: "user",
-            content: userPrompt,
-          },
-        ],
-      }),
-      signal: AbortSignal.timeout(45000),
-    });
+  const res = await generateGeminiText({
+    module: "application-timeline",
+    systemInstruction: TIMELINE_SYSTEM,
+    userText: userPrompt,
+    maxOutputTokens: 8192,
+    responseMimeType: "application/json",
+    temperature: 0.35,
+    signal: AbortSignal.timeout(55_000),
+  });
 
-    if (!res.ok) {
-      console.warn("[generateApplicationTimeline]", await res.text());
-      return fallback();
-    }
-
-    const body = (await res.json()) as {
-      content?: Array<{ type: string; text?: string }>;
-    };
-    const text = body.content?.find((c) => c.type === "text")?.text?.trim();
-    if (!text) return fallback();
-
-    const parsed = parseAnthropicTimelineJson(text);
-    if (!parsed || !parsed.phases?.length) return fallback();
-
-    return { data: parsed, source: "anthropic" };
-  } catch (e) {
-    console.warn("[generateApplicationTimeline]", e);
+  if (!res.ok) {
+    console.warn("[generateApplicationTimeline]", res.error);
     return fallback();
   }
+
+  const parsed = parseTimelineJson(res.text);
+  if (!parsed || !parsed.phases?.length) return fallback();
+
+  return { data: parsed, source: "gemini" };
 }

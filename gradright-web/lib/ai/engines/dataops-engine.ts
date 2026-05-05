@@ -1,5 +1,5 @@
 /**
- * DataOps engine (GEMINI_DATAOPS_API_KEY) — ranking, prioritization, signal simulation.
+ * DataOps engine — ranking, prioritization, signal simulation (shared `GEMINI_API_KEY` / Groq).
  * Pure deterministic helpers below are pluggable: later swap implementations for live feeds
  * without changing dashboard / explore / funding surfaces.
  */
@@ -72,7 +72,7 @@ export function simulateDataOpsSignals(
   } else if (primary.includes("canada")) {
     uniTemplates.push(
       {
-        label: "Canada — PGWP-friendly cohorts",
+        label: "Canada — PGWP-friendly pathways",
         fit_score_0_to_100: Math.round(60 + gpaBoost * 0.38),
         rationale: "Emphasizes pathway clarity and intake timing vs. your stated goals.",
       }
@@ -97,7 +97,7 @@ export function simulateDataOpsSignals(
 
   if (field === "cs_data") {
     uniTemplates.push({
-      label: "Technical depth cohort (projects + skills signal)",
+      label: "Technical depth track (projects + skills)",
       fit_score_0_to_100: Math.round(62 + Math.min(18, (master.extracted.skills?.length ?? 0) * 1.2)),
       rationale: "Ranks programs that reward provable build experience.",
     });

@@ -1,9 +1,8 @@
+import { generateGeminiText } from "@/lib/ai/gemini-text-client";
 import { CAREER_RISK_SUMMARY_SYSTEM } from "@/lib/ai/prompts/risk-narrator";
 import type { NormalizedRiskEngineResult } from "@/lib/onboarding/risk-engine-schema";
 import type { RiskEngineRequestBody } from "@/lib/onboarding/map-risk-input";
 import type { RiskLabel, StudentProfile } from "@/lib/types";
-
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
 
 function fallbackSummary(
   riskLabel: RiskLabel,
@@ -21,23 +20,12 @@ function fallbackSummary(
   return `Your profile reads higher-risk on placement timing—near ${pct}% within six months in this model—so job search discipline matters more than average. The ₹${low}–₹${high} LPA band is achievable but may take more cycles or geography flexibility. Focus on closing skill gaps employers screen for and expanding proof of work beyond coursework.`;
 }
 
+/** C-003: Career risk coaching copy — Gemini `profile` key. */
 export async function generateCareerRiskSummary(input: {
   risk: NormalizedRiskEngineResult;
   profile: StudentProfile;
   engineInput: RiskEngineRequestBody;
 }): Promise<string> {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
-    return fallbackSummary(
-      input.risk.risk_label,
-      input.risk.salary_band_low_lpa,
-      input.risk.salary_band_high_lpa,
-      input.risk.placement_prob_6m
-    );
-  }
-
-  const model = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
-
   const userPayload = {
     risk_score_raw: input.risk.risk_score_raw,
     risk_label: input.risk.risk_label,
@@ -59,53 +47,18 @@ export async function generateCareerRiskSummary(input: {
     },
   };
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 220,
-        system: CAREER_RISK_SUMMARY_SYSTEM,
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify(userPayload),
-          },
-        ],
-      }),
-      signal: AbortSignal.timeout(6000),
-    });
+  const res = await generateGeminiText({
+    module: "career-risk-summary",
+    systemInstruction: CAREER_RISK_SUMMARY_SYSTEM,
+    userText: JSON.stringify(userPayload),
+    maxOutputTokens: 400,
+    responseMimeType: "text/plain",
+    temperature: 0.4,
+    signal: AbortSignal.timeout(10_000),
+  });
 
-    if (!res.ok) {
-      console.warn("[generateCareerRiskSummary]", await res.text());
-      return fallbackSummary(
-        input.risk.risk_label,
-        input.risk.salary_band_low_lpa,
-        input.risk.salary_band_high_lpa,
-        input.risk.placement_prob_6m
-      );
-    }
-
-    const data = (await res.json()) as {
-      content?: Array<{ type: string; text?: string }>;
-    };
-    const text = data.content?.find((c) => c.type === "text")?.text?.trim();
-    if (!text) {
-      return fallbackSummary(
-        input.risk.risk_label,
-        input.risk.salary_band_low_lpa,
-        input.risk.salary_band_high_lpa,
-        input.risk.placement_prob_6m
-      );
-    }
-    return text.replace(/^["']|["']$/g, "").slice(0, 800);
-  } catch (e) {
-    console.warn("[generateCareerRiskSummary]", e);
+  if (!res.ok) {
+    console.warn("[generateCareerRiskSummary]", res.error);
     return fallbackSummary(
       input.risk.risk_label,
       input.risk.salary_band_low_lpa,
@@ -113,4 +66,15 @@ export async function generateCareerRiskSummary(input: {
       input.risk.placement_prob_6m
     );
   }
+
+  const text = res.text.replace(/^["']|["']$/g, "").trim().slice(0, 800);
+  if (!text) {
+    return fallbackSummary(
+      input.risk.risk_label,
+      input.risk.salary_band_low_lpa,
+      input.risk.salary_band_high_lpa,
+      input.risk.placement_prob_6m
+    );
+  }
+  return text;
 }

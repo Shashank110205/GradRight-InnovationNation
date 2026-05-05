@@ -1,12 +1,8 @@
 "use client";
 
-import { GRADRIGHT_AI_FALLBACK_MESSAGE } from "@/lib/ai/psychology-layer";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import type { UIMessage } from "ai";
 import { MessageCircle, SendHorizontal, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +15,13 @@ import {
 } from "@/components/ui/sheet";
 import { resolveMentorMode } from "@/lib/ai/mentor-mode";
 import type { MentorMode } from "@/lib/ai/mentor-mode";
+import { postFeatureApi } from "@/lib/hooks/useFeatureApi";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "gradright-dashboard-chat";
 const MAX_MESSAGES = 50;
+
+type ChatMsg = { id: string; role: "user" | "assistant"; text: string };
 
 const STARTERS_BY_MODE: Record<
   MentorMode,
@@ -60,7 +59,7 @@ function mentorChrome(mode: MentorMode): {
     return {
       title: "GradRight Explore Intelligence",
       description:
-        "Country fit, university logic, admissions myths, and pathway questions — personalized to your profile.",
+        "Country fit, university logic, admissions myths, and pathway questions — personalized to your profile hub.",
       fabLabel: "Open Explore Intelligence",
       useDiscoverIcon: true,
     };
@@ -92,17 +91,7 @@ function mentorChrome(mode: MentorMode): {
   };
 }
 
-function textFromMessage(m: UIMessage): string {
-  return m.parts
-    .filter(
-      (p): p is { type: "text"; text: string } =>
-        p.type === "text" && typeof (p as { text?: string }).text === "string"
-    )
-    .map((p) => p.text)
-    .join("");
-}
-
-export function ChatbotToggle({ appUserId }: { appUserId: string }) {
+export function ChatbotToggle({ appUserId: _appUserId }: { appUserId: string }) {
   const pathname = usePathname();
   const mentorMode = resolveMentorMode(pathname);
   const chrome = mentorChrome(mentorMode);
@@ -112,36 +101,14 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
   const [input, setInput] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [transportError, setTransportError] = useState<string | null>(null);
-
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/ai/chat",
-        prepareSendMessagesRequest: ({ messages, body }) => ({
-          body: {
-            ...body,
-            messages,
-            user_id: appUserId,
-            mentor_mode: mentorMode,
-          },
-        }),
-      }),
-    [appUserId, mentorMode]
-  );
-
-  const { messages, sendMessage, status, setMessages } = useChat({
-    id: "gradright-dashboard",
-    transport,
-    onError: () => {
-      setTransportError(GRADRIGHT_AI_FALLBACK_MESSAGE);
-    },
-  });
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     try {
       const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       if (raw) {
-        const parsed = JSON.parse(raw) as UIMessage[];
+        const parsed = JSON.parse(raw) as ChatMsg[];
         if (Array.isArray(parsed) && parsed.length > 0) {
           setMessages(parsed.slice(-MAX_MESSAGES));
         }
@@ -149,10 +116,8 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
     } catch {
       /* ignore */
     }
-    queueMicrotask(() => {
-      setHydrated(true);
-    });
-  }, [setMessages]);
+    queueMicrotask(() => setHydrated(true));
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -178,7 +143,33 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
     };
   }, []);
 
-  const busy = status === "streaming" || status === "submitted";
+  const sendText = async (text: string) => {
+    const t = text.trim();
+    if (!t || busy) return;
+    setTransportError(null);
+    setBusy(true);
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), role: "user", text: t },
+    ]);
+    const r = await postFeatureApi<{ response: string; source: string }>("mentor", {
+      message: t,
+    });
+    setBusy(false);
+    if (!r.ok) {
+      setTransportError(r.error);
+      return;
+    }
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        text: r.data.response,
+      },
+    ]);
+  };
+
   const FabIcon = chrome.useDiscoverIcon ? Sparkles : MessageCircle;
 
   return (
@@ -204,7 +195,7 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {transportError ? (
-                <p className="rounded-xl border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                <p className="rounded-xl border border-border bg-muted/50 px-3 py-2 text-sm text-destructive">
                   {transportError}
                 </p>
               ) : null}
@@ -217,10 +208,7 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
                         key={s}
                         type="button"
                         disabled={busy}
-                        onClick={() => {
-                          setTransportError(null);
-                          sendMessage({ text: s });
-                        }}
+                        onClick={() => void sendText(s)}
                         className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-left text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
                       >
                         {s}
@@ -230,28 +218,23 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
                 </div>
               ) : null}
 
-              {messages.map((m) => {
-                const text = textFromMessage(m);
-                if (!text && m.role === "assistant") return null;
-                const isUser = m.role === "user";
-                return (
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
+                >
                   <div
-                    key={m.id}
-                    className={cn("flex", isUser ? "justify-end" : "justify-start")}
+                    className={cn(
+                      "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
+                      m.role === "user"
+                        ? "bg-brand-primary text-white"
+                        : "bg-muted text-foreground"
+                    )}
                   >
-                    <div
-                      className={cn(
-                        "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
-                        isUser
-                          ? "bg-brand-primary text-white"
-                          : "bg-muted text-foreground"
-                      )}
-                    >
-                      {text}
-                    </div>
+                    {m.text}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
 
             <form
@@ -260,8 +243,7 @@ export function ChatbotToggle({ appUserId }: { appUserId: string }) {
                 e.preventDefault();
                 const t = input.trim();
                 if (!t || busy) return;
-                setTransportError(null);
-                sendMessage({ text: t });
+                void sendText(t);
                 setInput("");
               }}
             >

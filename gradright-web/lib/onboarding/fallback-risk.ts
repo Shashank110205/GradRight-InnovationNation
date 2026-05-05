@@ -23,6 +23,82 @@ const DEFAULT_INTEL = {
     "Confidence: Medium (benchmark data + profile heuristics)",
 };
 
+function readinessExtrasFromBody(
+  body: RiskEngineRequestBody,
+  coveragePct: number,
+  total: number
+): Pick<
+  NormalizedRiskEngineResult,
+  | "profile_completeness_score"
+  | "readiness_signals"
+  | "strengths"
+  | "improvement_areas"
+> {
+  let pc = 0;
+  if (body.institute_tier) pc += 22;
+  if (body.cgpa_normalized > 0) pc += 22;
+  if (body.internship_months > 0) pc += 18;
+  if (body.certification_count > 0) pc += 12;
+  if (body.work_experience_years > 0) pc += 12;
+  if (body.target_country) pc += 8;
+  if (body.target_sector && body.target_sector !== "Other") pc += 6;
+  const profile_completeness_score = Math.min(100, pc);
+  const readiness_signals: Record<string, string> = {
+    internships:
+      body.internship_months >= 6
+        ? "strong"
+        : body.internship_months >= 3
+          ? "ok"
+          : "thin",
+    certifications: body.certification_count > 0 ? "present" : "missing",
+    experience:
+      body.work_experience_years >= 2
+        ? "seasoned"
+        : body.work_experience_years === 0
+          ? "early"
+          : "building",
+    data_coverage:
+      coveragePct >= 75 ? "high" : coveragePct >= 55 ? "medium" : "low",
+  };
+  const strengths: string[] = [];
+  const improvement_areas: string[] = [];
+  if (body.cgpa_normalized >= 0.78) {
+    strengths.push("CGPA signal is in a competitive band for many targets.");
+  }
+  if (body.internship_months >= 6) {
+    strengths.push("Internship depth supports faster employer confidence.");
+  }
+  if (body.certification_count > 0) {
+    strengths.push("Certifications add verifiable skill signals.");
+  }
+  if (body.cgpa_normalized < 0.62) {
+    improvement_areas.push(
+      "Consider stronger test scores or coursework evidence to offset CGPA."
+    );
+  }
+  if (body.internship_months < 4) {
+    improvement_areas.push(
+      "Add a structured sector internship before placement windows tighten."
+    );
+  }
+  if (body.certification_count === 0) {
+    improvement_areas.push(
+      "Add one field-relevant certification aligned to roles you target."
+    );
+  }
+  if (total < 55) {
+    improvement_areas.push(
+      "Composite score has headroom — prioritize one high-leverage upgrade this quarter."
+    );
+  }
+  return {
+    profile_completeness_score,
+    readiness_signals,
+    strengths: strengths.slice(0, 4),
+    improvement_areas: improvement_areas.slice(0, 4),
+  };
+}
+
 /** Rule-based score from engine-shaped input when the Python service is offline. */
 export function computeFallbackRiskEngineResultFromBody(
   body: RiskEngineRequestBody
@@ -125,6 +201,7 @@ export function computeFallbackRiskEngineResultFromBody(
     grad_score_display_title: intel.grad_score_display_title,
     intelligence_source_note: intel.intelligence_source_note,
     score_confidence_user_message: intel.score_confidence_user_message,
+    ...readinessExtrasFromBody(body, intel.score_data_coverage_percentage, total),
   };
 }
 
@@ -184,5 +261,24 @@ export function computeFallbackRiskEngineResult(
       },
     ],
     ...DEFAULT_INTEL,
+    profile_completeness_score: Math.min(
+      100,
+      28 +
+        (answers.broad_field ? 12 : 0) +
+        (answers.target_country ? 8 : 0) +
+        (answers.current_academic_level.includes("3+") ? 10 : 4)
+    ),
+    readiness_signals: {
+      internships: "unknown",
+      certifications: "unknown",
+      experience: "unknown",
+      data_coverage: "medium",
+    },
+    strengths: [
+      "Field and destination choices set a credible baseline narrative for admits and financing.",
+    ],
+    improvement_areas: [
+      "Run the full career risk form with transcripts-backed CGPA and internship months for a sharper engine read.",
+    ],
   };
 }

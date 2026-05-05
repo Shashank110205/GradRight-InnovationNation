@@ -20,6 +20,8 @@ export const NBFC_DEMO_PIPELINE: NBFCApplicationListItem[] = [
     scholarship_dependency: "high",
     candidate_quality: "strong",
     repayment_confidence_pct: 86,
+    repayment_score: 82,
+    risk_flag: "favorable",
   },
   {
     id: "demo-james-k",
@@ -39,6 +41,8 @@ export const NBFC_DEMO_PIPELINE: NBFCApplicationListItem[] = [
     scholarship_dependency: "medium",
     candidate_quality: "watch",
     repayment_confidence_pct: 71,
+    repayment_score: 68,
+    risk_flag: "standard",
   },
   {
     id: "demo-sofia-l",
@@ -58,5 +62,7 @@ export const NBFC_DEMO_PIPELINE: NBFCApplicationListItem[] = [
     scholarship_dependency: "medium",
     candidate_quality: "strong",
     repayment_confidence_pct: 79,
+    repayment_score: 74,
+    risk_flag: "standard",
   },
 ];

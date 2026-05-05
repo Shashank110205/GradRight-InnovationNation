@@ -90,6 +90,23 @@ export interface StudentProfile {
   /** Current priority focus (prestige, salary, scholarship, affordability, fastest_placement, or short free text). */
   scholarship_priority: string | null;
   profile_completeness_score: number;
+  /**
+   * conservative | moderate | aggressive — from profile intelligence.
+   * When unset in DB, mapper uses `"medium"` (no selection yet).
+   */
+  risk_appetite?: string;
+  /**
+   * clear | emerging | exploring — how settled the student is on direction.
+   * When unset in DB, mapper uses `"unknown"`.
+   */
+  career_path_clarity?: string;
+  /** Total professional experience years (resume parse); DB null maps to `0`. */
+  experience_years?: number;
+  /**
+   * affordability | prestige | balanced — funding vs brand tradeoff.
+   * When unset in DB, mapper uses `"balanced"`.
+   */
+  funding_value_focus?: string;
   enrichment_status: string | null;
   last_enriched_at: string | null;
   created_at: string;
@@ -514,6 +531,10 @@ export interface NBFCApplicationListItem {
   scholarship_dependency?: "high" | "medium" | "low" | "unknown";
   candidate_quality?: "strong" | "watch" | "elevated_risk";
   repayment_confidence_pct?: number;
+  /** Blended desk score: salary band + engine demand + placement (0–100). */
+  repayment_score?: number;
+  /** Compact desk flag from profile + risk + placement. */
+  risk_flag?: string;
 }
 
 export interface NBFCPortfolioData {
@@ -543,6 +564,14 @@ export interface APIResponse<T = unknown> {
 // Helper to create consistent API responses
 export function apiSuccess<T>(data: T): APIResponse<T> {
   return { success: true, data };
+}
+
+/** Standard feature API envelope: `data` + `meta` (e.g. feature id, version). */
+export function apiSuccessMeta<
+  T,
+  M extends Record<string, unknown> = Record<string, unknown>,
+>(data: T, meta?: M): APIResponse<T> & { meta: M } {
+  return { success: true, data, meta: meta ?? ({} as M) };
 }
 
 export function apiError(message: string): APIResponse {

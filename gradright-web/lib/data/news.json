@@ -1,0 +1,285 @@
+[
+  {
+    "id": "n0",
+    "source": "DAAD",
+    "headline": "Germany highlights employability data for STEM graduates",
+    "summary": "Federal messaging continues to tie international graduate outcomes to regional employer demand.",
+    "url": "https://www.daad.de/en/study-and-research-in-germany/",
+    "countries": [
+      "Germany"
+    ],
+    "fields": [
+      "Engineering",
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "n1",
+    "source": "EducationUSA",
+    "headline": "US institutions publish earlier total cost of attendance estimates",
+    "summary": "Admissions offices are standardizing stipend and fee tables earlier in the cycle for comparison.",
+    "url": "https://educationusa.state.gov/your-5-steps-us-study",
+    "countries": [
+      "United States"
+    ],
+    "fields": [
+      "Business",
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "n2",
+    "source": "Government of Canada",
+    "headline": "PGWP eligibility reminders tied to designated learning institutions",
+    "summary": "Policy communications stress verifying DLI status and full-time enrollment continuity.",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work.html",
+    "countries": [
+      "Canada"
+    ],
+    "fields": [
+      "Engineering",
+      "Data Science"
+    ]
+  },
+  {
+    "id": "n3",
+    "source": "UK Council for International Student Affairs",
+    "headline": "Graduate Route compliance guidance updated for cohort planning",
+    "summary": "UKCISA summarizes how students should document study periods for post-study work eligibility.",
+    "url": "https://www.ukcisa.org.uk/Information--Advice/Working/Graduate-route",
+    "countries": [
+      "United Kingdom"
+    ],
+    "fields": [
+      "Business",
+      "Public Policy"
+    ]
+  },
+  {
+    "id": "n4",
+    "source": "Australian Government",
+    "headline": "Temporary Graduate visa processing priorities discussed in departmental updates",
+    "summary": "Official channels note seasonal volume effects on graduate visa timelines.",
+    "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/temporary-graduate-485",
+    "countries": [
+      "Australia"
+    ],
+    "fields": [
+      "Life Sciences",
+      "Engineering"
+    ]
+  },
+  {
+    "id": "n5",
+    "source": "Study in Holland",
+    "headline": "Dutch orientation year remains competitive for non-EU tech graduates",
+    "summary": "National portals highlight employer demand in Randstad metros for English-speaking roles.",
+    "url": "https://www.studyinholland.nl/",
+    "countries": [
+      "Netherlands"
+    ],
+    "fields": [
+      "Computer Science",
+      "Data Science"
+    ]
+  },
+  {
+    "id": "n6",
+    "source": "Campus France",
+    "headline": "APS renewal discussions emphasize French-language workplace integration",
+    "summary": "Guidance for international masters graduates navigating APS to salarié transitions.",
+    "url": "https://www.campusfrance.org/en",
+    "countries": [
+      "France"
+    ],
+    "fields": [
+      "Business",
+      "Public Policy"
+    ]
+  },
+  {
+    "id": "n7",
+    "source": "Ministry of Education Singapore",
+    "headline": "Singapore research scholarships maintain strong STEM cohort targets",
+    "summary": "Government scholarship windows align with faculty hiring in computing and engineering.",
+    "url": "https://www.moe.gov.sg/",
+    "countries": [
+      "Singapore"
+    ],
+    "fields": [
+      "Computer Science",
+      "Engineering"
+    ]
+  },
+  {
+    "id": "n8",
+    "source": "ETH Zurich",
+    "headline": "Swiss federal institutes publish median time-to-offer for MSc graduates",
+    "summary": "Program-level disclosures help benchmark salary expectations versus living costs in Zurich.",
+    "url": "https://ethz.ch/en.html",
+    "countries": [
+      "Switzerland"
+    ],
+    "fields": [
+      "Engineering",
+      "Data Science"
+    ]
+  },
+  {
+    "id": "n9",
+    "source": "Irish Immigration",
+    "headline": "Third Level Graduate Programme conditions clarified for stamp transitions",
+    "summary": "Official immigration pages outline permitted work while seeking skilled employment.",
+    "url": "https://www.irishimmigration.ie/",
+    "countries": [
+      "Ireland"
+    ],
+    "fields": [
+      "Computer Science",
+      "Business"
+    ]
+  },
+  {
+    "id": "n10",
+    "source": "European Commission",
+    "headline": "Erasmus Mundus consortia open 2026 joint-degree cohorts",
+    "summary": "Commission portals list accredited joint programs with mobility tracks across member states.",
+    "url": "https://erasmus-plus.ec.europa.eu/",
+    "countries": [
+      "Germany",
+      "Netherlands",
+      "France"
+    ],
+    "fields": [
+      "Public Policy",
+      "Engineering"
+    ]
+  },
+  {
+    "id": "n11",
+    "source": "Commonwealth Scholarship Commission",
+    "headline": "Commonwealth masters scholarships publish country quotas",
+    "summary": "Annual competition timelines emphasize references and development impact statements.",
+    "url": "https://cscuk.fcdo.gov.uk/",
+    "countries": [
+      "United Kingdom",
+      "Canada"
+    ],
+    "fields": [
+      "Life Sciences",
+      "Public Policy"
+    ]
+  },
+  {
+    "id": "n12",
+    "source": "US Federal Student Aid",
+    "headline": "FAFSA changes continue to affect graduate PLUS planning",
+    "summary": "Federal Student Aid reminds borrowers to verify school codes and aggregate loan limits.",
+    "url": "https://studentaid.gov/",
+    "countries": [
+      "United States"
+    ],
+    "fields": [
+      "Business",
+      "Life Sciences"
+    ]
+  },
+  {
+    "id": "n13",
+    "source": "Reserve Bank of India",
+    "headline": "RBI circulars reiterate co-borrower norms for education loans",
+    "summary": "Regulatory text stresses documentation consistency for overseas education exposures.",
+    "url": "https://www.rbi.org.in/",
+    "countries": [
+      "India"
+    ],
+    "fields": [
+      "Business",
+      "Engineering"
+    ]
+  },
+  {
+    "id": "n14",
+    "source": "German Academic Exchange Service",
+    "headline": "DAAD scholarship pages highlight research stay insurance requirements",
+    "summary": "Insurance and enrollment proofs remain common bottlenecks in German scholarship cycles.",
+    "url": "https://www.daad.de/en/scholarship/",
+    "countries": [
+      "Germany"
+    ],
+    "fields": [
+      "Life Sciences",
+      "Engineering"
+    ]
+  },
+  {
+    "id": "n15",
+    "source": "Immigration Refugees and Citizenship Canada",
+    "headline": "Study permit financial evidence thresholds updated for inflation",
+    "summary": "IRCC guidance reflects updated living cost assumptions for major study destinations.",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit.html",
+    "countries": [
+      "Canada"
+    ],
+    "fields": [
+      "Computer Science",
+      "Business"
+    ]
+  },
+  {
+    "id": "n16",
+    "source": "UK Visas and Immigration",
+    "headline": "Student visa maintenance funds guidance revised for London postcodes",
+    "summary": "GOV.UK maintenance tables differentiate inner London versus rest of UK study costs.",
+    "url": "https://www.gov.uk/student-visa",
+    "countries": [
+      "United Kingdom"
+    ],
+    "fields": [
+      "Data Science",
+      "Engineering"
+    ]
+  },
+  {
+    "id": "n17",
+    "source": "Australian Trade and Investment Commission",
+    "headline": "Austrade sector briefs note hiring steadiness in analytics roles",
+    "summary": "Government trade briefs summarize graduate hiring in analytics adjacent to cloud platforms.",
+    "url": "https://www.austrade.gov.au/",
+    "countries": [
+      "Australia"
+    ],
+    "fields": [
+      "Data Science",
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "n18",
+    "source": "Nuffic",
+    "headline": "Dutch housing shortages flagged for international student intake",
+    "summary": "Nuffic advises early housing contracts for Randstad universities.",
+    "url": "https://www.nuffic.nl/en",
+    "countries": [
+      "Netherlands"
+    ],
+    "fields": [
+      "Engineering",
+      "Business"
+    ]
+  },
+  {
+    "id": "n19",
+    "source": "Campus France Scholarships",
+    "headline": "Eiffel program emphasizes international policy leadership tracks",
+    "summary": "Campus France scholarship pages outline evaluation criteria for priority fields.",
+    "url": "https://www.campusfrance.org/en/eiffel-scholarship-program-of-excellence",
+    "countries": [
+      "France"
+    ],
+    "fields": [
+      "Public Policy",
+      "Business"
+    ]
+  }
+]

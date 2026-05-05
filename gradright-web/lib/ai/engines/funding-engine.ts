@@ -1,5 +1,5 @@
 /**
- * Funding engine (GEMINI_FUNDING_API_KEY) — cost, ROI, readiness, calm financing literacy.
+ * Funding engine — cost, ROI, readiness, calm financing literacy (shared `GEMINI_API_KEY` / Groq).
  */
 
 import type { StudentMasterProfile } from "@/lib/profile/student-master-profile";

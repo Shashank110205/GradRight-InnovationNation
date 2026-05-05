@@ -33,6 +33,8 @@ function resolveDistDir(): string {
 
 const nextConfig: NextConfig = {
   distDir: resolveDistDir(),
+  /** Keep pdf-parse + pdfjs-dist out of the RSC webpack bundle (avoids `defineProperty on non-object` at init). */
+  serverExternalPackages: ["pdf-parse"],
   experimental: {
     serverActions: {
       allowedOrigins: ["localhost:3000", "localhost:3001"],

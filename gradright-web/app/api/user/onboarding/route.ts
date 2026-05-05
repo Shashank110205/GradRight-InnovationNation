@@ -1,3 +1,7 @@
+/**
+ * C-004: Placement probabilities and risk labels live only in `risk_scores` — not duplicated on `student_profiles`.
+ * C-005: Onboarding answers → profile column map is documented on `upsertStudentProfileFromOnboarding`.
+ */
 import { generateOnboardingRiskOneLiner } from "@/lib/ai/generate-onboarding-liner";
 import { createServerClient } from "@/lib/db/supabase";
 import { insertRiskScoreFromOnboarding } from "@/lib/db/queries/risk_scores";
@@ -15,6 +19,8 @@ import { fetchRiskEngineScore } from "@/lib/onboarding/call-risk-engine";
 import { onboardingAnswersSchema } from "@/lib/onboarding/onboarding-answers-schema";
 import { deriveLoanEligibilityBand } from "@/lib/onboarding/loan-eligibility";
 import { buildUniversityMatches } from "@/lib/onboarding/university-matches";
+import { mergeProfileCompletenessIntoMetadata } from "@/lib/profile/calculate-profile-completeness";
+import { applyProfileHubPatch } from "@/lib/profile/user-profile-hub";
 import {
   apiError,
   apiSuccess,
@@ -150,6 +156,19 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
 
     const score = buildGradRightScore({ answers, risk, oneLiner });
+
+    const prevMeta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+    const withHub = applyProfileHubPatch(prevMeta, {
+      onboarding: {
+        submitted_at: new Date().toISOString(),
+        answers: { ...answers } as Record<string, unknown>,
+      },
+    });
+    const nextMeta = mergeProfileCompletenessIntoMetadata(withHub);
+    const { error: hubErr } = await supabase.auth.updateUser({ data: nextMeta });
+    if (hubErr) {
+      console.error("[POST /api/user/onboarding] profile_hub", hubErr);
+    }
 
     return NextResponse.json(apiSuccess(score));
   } catch (e) {

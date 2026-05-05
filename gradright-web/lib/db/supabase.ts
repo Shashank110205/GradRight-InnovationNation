@@ -5,13 +5,21 @@ import {
 import { createClient as createServiceRoleClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+/** Trim + strip CR/BOM — CRLF `.env` on Windows often leaves `\r` on values and breaks URLs/JWTs. */
+export function envStr(name: string): string | undefined {
+  const v = process.env[name];
+  if (v === undefined) return undefined;
+  const t = v.trim().replace(/\r/g, "").replace(/\uFEFF/g, "");
+  return t.length > 0 ? t : undefined;
+}
+
 /**
  * Browser / client-component Supabase client (anon key, public).
  * Uses `@supabase/ssr` for consistent auth behavior with the server client.
  */
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = envStr("NEXT_PUBLIC_SUPABASE_URL");
+  const anonKey = envStr("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   if (!url || !anonKey) {
     throw new Error(
@@ -28,8 +36,8 @@ export function createClient() {
  * signed-in user.
  */
 export async function createServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = envStr("NEXT_PUBLIC_SUPABASE_URL");
+  const anonKey = envStr("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   if (!url || !anonKey) {
     throw new Error(
@@ -63,8 +71,8 @@ export async function createServerClient() {
  * Uses `@supabase/supabase-js` because the service role does not use cookie sessions.
  */
 export function createServiceRoleSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = envStr("NEXT_PUBLIC_SUPABASE_URL");
+  const serviceKey = envStr("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!url || !serviceKey) {
     throw new Error(

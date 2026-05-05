@@ -1,0 +1,162 @@
+[
+  {
+    "id": "v0",
+    "country": "Germany",
+    "route_name": "EU Blue Card study pathway",
+    "typical_processing_months": 2,
+    "post_study_work_months": 18,
+    "summary": "Work rights tied to qualification and salary threshold."
+  },
+  {
+    "id": "v1",
+    "country": "United States",
+    "route_name": "F-1 OPT STEM",
+    "typical_processing_months": 3,
+    "post_study_work_months": 36,
+    "summary": "STEM extension lengthens US work authorization window."
+  },
+  {
+    "id": "v2",
+    "country": "Canada",
+    "route_name": "PGWP",
+    "typical_processing_months": 4,
+    "post_study_work_months": 36,
+    "summary": "Length linked to program duration."
+  },
+  {
+    "id": "v3",
+    "country": "United Kingdom",
+    "route_name": "Graduate Route",
+    "typical_processing_months": 5,
+    "post_study_work_months": 24,
+    "summary": "Post-study window without employer sponsorship initially."
+  },
+  {
+    "id": "v4",
+    "country": "Australia",
+    "route_name": "Temporary Graduate 485",
+    "typical_processing_months": 2,
+    "post_study_work_months": 48,
+    "summary": "Regional streams may extend stay."
+  },
+  {
+    "id": "v5",
+    "country": "Netherlands",
+    "route_name": "Orientation year permit",
+    "typical_processing_months": 3,
+    "post_study_work_months": 12,
+    "summary": "Search year after Dutch degree."
+  },
+  {
+    "id": "v6",
+    "country": "France",
+    "route_name": "APS titre séjour",
+    "typical_processing_months": 4,
+    "post_study_work_months": 12,
+    "summary": "Job-search authorization after masters."
+  },
+  {
+    "id": "v7",
+    "country": "Singapore",
+    "route_name": "Long-Term Visit Pass",
+    "typical_processing_months": 5,
+    "post_study_work_months": 0,
+    "summary": "Often employer-sponsored after studies."
+  },
+  {
+    "id": "v8",
+    "country": "Switzerland",
+    "route_name": "Non-EU B permit path",
+    "typical_processing_months": 2,
+    "post_study_work_months": 12,
+    "summary": "Cantonal quotas apply."
+  },
+  {
+    "id": "v9",
+    "country": "Ireland",
+    "route_name": "Third Level Graduate Programme",
+    "typical_processing_months": 3,
+    "post_study_work_months": 24,
+    "summary": "Stamp 2 permission after eligible programs."
+  },
+  {
+    "id": "v10",
+    "country": "Germany",
+    "route_name": "EU Blue Card study pathway",
+    "typical_processing_months": 4,
+    "post_study_work_months": 18,
+    "summary": "Work rights tied to qualification and salary threshold."
+  },
+  {
+    "id": "v11",
+    "country": "United States",
+    "route_name": "F-1 OPT STEM",
+    "typical_processing_months": 5,
+    "post_study_work_months": 36,
+    "summary": "STEM extension lengthens US work authorization window."
+  },
+  {
+    "id": "v12",
+    "country": "Canada",
+    "route_name": "PGWP",
+    "typical_processing_months": 2,
+    "post_study_work_months": 36,
+    "summary": "Length linked to program duration."
+  },
+  {
+    "id": "v13",
+    "country": "United Kingdom",
+    "route_name": "Graduate Route",
+    "typical_processing_months": 3,
+    "post_study_work_months": 24,
+    "summary": "Post-study window without employer sponsorship initially."
+  },
+  {
+    "id": "v14",
+    "country": "Australia",
+    "route_name": "Temporary Graduate 485",
+    "typical_processing_months": 4,
+    "post_study_work_months": 48,
+    "summary": "Regional streams may extend stay."
+  },
+  {
+    "id": "v15",
+    "country": "Netherlands",
+    "route_name": "Orientation year permit",
+    "typical_processing_months": 5,
+    "post_study_work_months": 12,
+    "summary": "Search year after Dutch degree."
+  },
+  {
+    "id": "v16",
+    "country": "France",
+    "route_name": "APS titre séjour",
+    "typical_processing_months": 2,
+    "post_study_work_months": 12,
+    "summary": "Job-search authorization after masters."
+  },
+  {
+    "id": "v17",
+    "country": "Singapore",
+    "route_name": "Long-Term Visit Pass",
+    "typical_processing_months": 3,
+    "post_study_work_months": 0,
+    "summary": "Often employer-sponsored after studies."
+  },
+  {
+    "id": "v18",
+    "country": "Switzerland",
+    "route_name": "Non-EU B permit path",
+    "typical_processing_months": 4,
+    "post_study_work_months": 12,
+    "summary": "Cantonal quotas apply."
+  },
+  {
+    "id": "v19",
+    "country": "Ireland",
+    "route_name": "Third Level Graduate Programme",
+    "typical_processing_months": 5,
+    "post_study_work_months": 24,
+    "summary": "Stamp 2 permission after eligible programs."
+  }
+]

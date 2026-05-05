@@ -1,5 +1,5 @@
 /**
- * Explore engine (GEMINI_EXPLORE_API_KEY) — countries, universities, admissions, pathways.
+ * Explore engine — countries, universities, admissions, pathways (shared `GEMINI_API_KEY` / Groq).
  */
 
 import type { StudentMasterProfile } from "@/lib/profile/student-master-profile";

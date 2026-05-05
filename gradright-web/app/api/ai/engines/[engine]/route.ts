@@ -6,7 +6,12 @@ import {
 import { describeExploreEngine } from "@/lib/ai/engines/explore-engine";
 import { describeFundingEngine } from "@/lib/ai/engines/funding-engine";
 import { describeProfileEngine } from "@/lib/ai/engines/profile-engine";
-import { getGeminiEngineKeyPresence } from "@/lib/ai/env";
+import { getAiKeyPresence } from "@/lib/ai/env";
+import { getCosts, getJobs, getNews, getScholarships, getUniversities, getVisa } from "@/lib/data";
+import { getLatestRiskScoreByUserId } from "@/lib/db/queries/risk_scores";
+import { ensureGroundedProfileContext } from "@/lib/profile/ensure-grounded-context";
+import { buildProfileHubApiPayload } from "@/lib/profile/profile-hub-bundle";
+import { buildStudentIntelligence } from "@/lib/profile/student-intelligence";
 import { buildStudentMasterProfile } from "@/lib/profile/student-master-profile";
 import { createServerClient } from "@/lib/db/supabase";
 import { getStudentProfileByUserId } from "@/lib/db/queries/student_profiles";
@@ -73,9 +78,46 @@ export async function GET(
     return NextResponse.json(apiError("Forbidden"), { status: 403 });
   }
 
-  const profile = await getStudentProfileByUserId(appUser.id);
-  const master = await buildStudentMasterProfile(appUser.id);
-  const keys = getGeminiEngineKeyPresence();
+  const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+
+  const [profile, risk, grounded] = await Promise.all([
+    getStudentProfileByUserId(appUser.id),
+    getLatestRiskScoreByUserId(appUser.id),
+    ensureGroundedProfileContext(supabase, meta, { force: false }),
+  ]);
+  const master = await buildStudentMasterProfile(appUser.id, { profile, risk });
+  const student_intelligence = buildStudentIntelligence(profile);
+  const datasets_preview = profile
+    ? {
+        universities: getUniversities(profile, 4).map((u) => ({
+          id: u.id,
+          name: u.name,
+          country: u.country,
+        })),
+        jobs: getJobs(profile, 4).map((j) => ({ id: j.id, title: j.title, country: j.country })),
+        scholarships: getScholarships(profile, 3).map((s) => ({
+          id: s.id,
+          name: s.name,
+          host_country: s.host_country,
+        })),
+        visa: getVisa(profile, 3).map((v) => ({
+          country: v.country,
+          route_name: v.route_name,
+          post_study_work_months: v.post_study_work_months,
+        })),
+        costs: getCosts(profile, 3).map((c) => ({
+          country: c.country,
+          living_monthly_usd: c.living_monthly_usd,
+          tuition_public_usd_year: c.tuition_public_usd_year,
+        })),
+        news: getNews(profile, 3).map((n) => ({
+          id: n.id,
+          headline: n.headline,
+          relevance_tag: n.relevance_tag,
+        })),
+      }
+    : null;
+  const keys = getAiKeyPresence();
 
   const snapshot = profile
     ? {
@@ -107,15 +149,30 @@ export async function GET(
   const dataops_preview =
     engine === "dataops" && master ? simulateDataOpsSignals(master) : null;
 
-  return NextResponse.json(
-    apiSuccess({
-      engine,
-      label: describe(engine),
-      policy: engine === "profile" ? "writes_via_profile_enrich_only" : "read_only",
-      gemini_key_configured: keys[engine],
-      profile_snapshot: snapshot,
-      master_digest,
-      dataops_preview,
-    })
-  );
+  const profile_hub_payload = buildProfileHubApiPayload(grounded.metadata);
+
+  const payload = apiSuccess({
+    engine,
+    label: describe(engine),
+    policy: engine === "profile" ? "writes_via_profile_enrich_only" : "read_only",
+    gemini_key_configured: keys.gemini,
+    profile_snapshot: snapshot,
+    master_digest,
+    dataops_preview,
+    student_intelligence,
+    datasets_preview,
+    profile_hub: profile_hub_payload.profile_hub,
+    grounded_context_meta: {
+      from_cache: grounded.fromCache,
+      refreshed: grounded.refreshed,
+      skip_reason: grounded.skip_reason,
+    },
+  });
+
+  return NextResponse.json(payload, {
+    headers: {
+      /** User-scoped: private cache only (avoid public edge cache of personalized JSON). */
+      "Cache-Control": "private, max-age=60, stale-while-revalidate=300",
+    },
+  });
 }

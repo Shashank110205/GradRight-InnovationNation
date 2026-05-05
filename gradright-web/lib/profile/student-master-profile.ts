@@ -43,6 +43,8 @@ export type StudentMasterProfile = {
     internship_months_total: number;
     certification_count: number;
     work_experience_years: number;
+    /** Resume-derived total years (defaults to 0 when unset). */
+    experience_years: number;
     target_universities: string[];
   };
   aspirations: {
@@ -50,6 +52,9 @@ export type StudentMasterProfile = {
     five_year_goal: string | null;
     dream_role: string | null;
     scholarship_priority: string | null;
+    risk_appetite: string;
+    career_path_clarity: string;
+    funding_value_focus: string;
   };
   funding: {
     loan_needed: boolean;
@@ -151,6 +156,7 @@ function buildFromRows(
       internship_months_total: p?.internship_months_total ?? 0,
       certification_count: p?.certification_count ?? 0,
       work_experience_years: p?.work_experience_years ?? 0,
+      experience_years: p?.experience_years ?? 0,
       target_universities: p?.target_universities ?? [],
     },
     aspirations: {
@@ -158,6 +164,9 @@ function buildFromRows(
       five_year_goal: p?.five_year_goal ?? null,
       dream_role: p?.dream_role ?? null,
       scholarship_priority: p?.scholarship_priority ?? null,
+      risk_appetite: p?.risk_appetite ?? "medium",
+      career_path_clarity: p?.career_path_clarity ?? "unknown",
+      funding_value_focus: p?.funding_value_focus ?? "balanced",
     },
     funding: {
       loan_needed: p?.loan_needed ?? true,
@@ -191,15 +200,26 @@ function buildFromRows(
   };
 }
 
+export type BuildStudentMasterProfilePrefetch = {
+  profile: StudentProfile | null;
+  risk: LatestRiskScoreSummary | null;
+};
+
 /**
  * Loads normalized master profile for a student `users.id` (internal UUID).
+ * Pass `prefetch` when profile and risk were already loaded to avoid duplicate queries.
  */
 export async function buildStudentMasterProfile(
-  userId: string
+  userId: string,
+  prefetch?: BuildStudentMasterProfilePrefetch | null
 ): Promise<StudentMasterProfile | null> {
   const user = await getUserById(userId);
   if (!user || user.role !== "student") {
     return null;
+  }
+
+  if (prefetch) {
+    return buildFromRows(userId, user, prefetch.profile, prefetch.risk);
   }
 
   const [profile, risk] = await Promise.all([
@@ -224,6 +244,9 @@ export function formatMasterProfileForPrompt(master: StudentMasterProfile): stri
       five_year_goal: truncate(master.aspirations.five_year_goal, 400),
       dream_role: master.aspirations.dream_role,
       scholarship_priority: master.aspirations.scholarship_priority,
+      risk_appetite: master.aspirations.risk_appetite,
+      career_path_clarity: master.aspirations.career_path_clarity,
+      funding_value_focus: master.aspirations.funding_value_focus,
     },
     funding: master.funding,
     extracted: {

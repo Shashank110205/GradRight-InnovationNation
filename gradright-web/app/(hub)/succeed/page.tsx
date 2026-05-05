@@ -24,8 +24,8 @@ export default function SucceedPage() {
 
       <GlassCard className="space-y-4 p-6">
         <p className="text-sm text-muted-foreground">
-          Placement and salary context for your cohort is already live in Career. This
-          hub will grow with visa checklists and relocation playbooks.
+          Placement and salary context for students with similar goals is already live in Career.
+          This hub will grow with visa checklists and relocation playbooks.
         </p>
         <Link
           href="/career"
