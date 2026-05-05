@@ -32,4 +32,4 @@ export const PROFILE_INTEL_CHAT_SUGGESTIONS: readonly {
   },
 ];
 
-export const PROFILE_INTEL_CHAT_INTRO = `I'm your **Profile Intelligence** coach (**Gemini**). Upload a PDF or TXT, run **Analyze résumé**, then **Save extraction to profile** so skills and projects sync to your record. After that, we will talk through goals here — and your replies are appended to your profile notes for the rest of GradRight.`;
+export const PROFILE_INTEL_CHAT_INTRO = `I'm your **Profile Intelligence** coach. Upload a résumé, run **Analyze résumé**, then **Save extraction to profile** so skills and projects sync to your record.`;

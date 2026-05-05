@@ -1,36 +1,21 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Bot,
   CheckCircle2,
   ChevronDown,
   Loader2,
   MessageSquare,
-  Send,
   Sparkles,
   UploadCloud,
-  User,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 import { GlassCard } from "@/components/shell/GlassCard";
 import { Button } from "@/components/ui/button";
-import {
-  PROFILE_INTEL_CHAT_INTRO,
-  PROFILE_INTEL_CHAT_SUGGESTIONS,
-} from "@/lib/profile/profile-intelligence-chat-config";
 import { cn } from "@/lib/utils";
-
-type ChatRole = "user" | "assistant";
-
-type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  content: string;
-};
 
 type ParsedResumePreview = {
   skills: string[];
@@ -63,10 +48,6 @@ function normalizeParsedResume(raw: unknown): ParsedResumePreview {
   const estimated_total_experience_years =
     typeof est === "number" && Number.isFinite(est) ? est : null;
   return { skills, projects, internships, estimated_total_experience_years };
-}
-
-function uid(): string {
-  return crypto.randomUUID();
 }
 
 function formatBold(line: string): React.ReactNode {
@@ -240,7 +221,7 @@ function ExtractionPreview({
         <details className="group rounded-xl border border-dashed border-border/70 bg-muted/15 px-4 py-2">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
             <ChevronDown className="h-4 w-4 shrink-0 transition group-open:rotate-180" />
-            Gemini summary (expand)
+            Coach notes (expand)
           </summary>
           <div className="mt-3 border-t border-border/40 pt-3">
             <Markdownish text={coachMarkdown} className="text-[13px]" />
@@ -251,38 +232,36 @@ function ExtractionPreview({
   );
 }
 
-const FIRST_FOLLOWUP =
-  "### Next up\nYour résumé signals are saved on your profile. **Where do you see yourself in the next five years?** Include geography if it matters (for example US, UK, EU, or India). A few sentences is perfect.";
-
 export function ProfileIntelligenceGeminiChat() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef<ChatMessage[]>([]);
-
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    { id: uid(), role: "assistant", content: PROFILE_INTEL_CHAT_INTRO },
-  ]);
-  const [input, setInput] = useState("");
+  const router = useRouter();
   const [resumePath, setResumePath] = useState<string | null>(null);
-  const [extractedContext, setExtractedContext] = useState("");
   const [parsedResume, setParsedResume] = useState<ParsedResumePreview | null>(null);
   const [coachMarkdown, setCoachMarkdown] = useState("");
   const [savedToProfile, setSavedToProfile] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [extractBusy, setExtractBusy] = useState(false);
   const [saveExtractBusy, setSaveExtractBusy] = useState(false);
-  const [streamBusy, setStreamBusy] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
   const [bannerTone, setBannerTone] = useState<"error" | "success" | "neutral">("neutral");
 
-  messagesRef.current = messages;
+  const [guidedStep, setGuidedStep] = useState(1);
+  const [gRole, setGRole] = useState("");
+  const [gDomain, setGDomain] = useState("");
+  const [gFive, setGFive] = useState("");
+  const [gConf, setGConf] = useState<"confident" | "exploring" | null>(null);
+  const [gExtra, setGExtra] = useState("");
+  const [goalsDone, setGoalsDone] = useState(false);
+  const [hubBusy, setHubBusy] = useState(false);
 
-  const chatUnlocked = savedToProfile;
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [messages, streamBusy, parsedResume, saveExtractBusy]);
+  const resetGuided = useCallback(() => {
+    setGuidedStep(1);
+    setGRole("");
+    setGDomain("");
+    setGFive("");
+    setGConf(null);
+    setGExtra("");
+    setGoalsDone(false);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -308,13 +287,13 @@ export function ProfileIntelligenceGeminiChat() {
     };
   }, []);
 
-  const aspirationFromChat = useMemo(() => {
-    const lines = messages
-      .filter((m) => m.role === "user")
-      .map((m) => m.content.trim())
-      .filter(Boolean);
-    return lines.join("\n\n").slice(0, 12000);
-  }, [messages]);
+  const canAdvance = useCallback(() => {
+    if (guidedStep === 1) return gRole.trim().length > 0;
+    if (guidedStep === 2) return gDomain.trim().length > 0;
+    if (guidedStep === 3) return gFive.trim().length > 0;
+    if (guidedStep === 4) return gConf !== null;
+    return true;
+  }, [gConf, gDomain, gFive, gRole, guidedStep]);
 
   const onUpload = async (file: File | null) => {
     if (!file) return;
@@ -341,8 +320,8 @@ export function ProfileIntelligenceGeminiChat() {
       setResumePath(json.data.storage_path);
       setParsedResume(null);
       setCoachMarkdown("");
-      setExtractedContext("");
       setSavedToProfile(false);
+      resetGuided();
       setBannerTone("neutral");
       setBanner("Résumé linked — run **Analyze résumé**, then **Save to profile**.");
     } catch {
@@ -376,7 +355,6 @@ export function ProfileIntelligenceGeminiChat() {
         error?: string;
         data?: {
           assistant_markdown?: string;
-          extracted_context?: string;
           parsed_resume?: ParsedResumePreview;
         };
       };
@@ -387,17 +365,8 @@ export function ProfileIntelligenceGeminiChat() {
       }
       setParsedResume(normalizeParsedResume(json.data.parsed_resume ?? {}));
       setCoachMarkdown(json.data.assistant_markdown?.trim() ?? "");
-      setExtractedContext(json.data.extracted_context?.trim() ?? "");
       setSavedToProfile(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: uid(),
-          role: "assistant",
-          content:
-            "### Résumé parsed\nReview the structured snapshot below. When it looks right, tap **Save to profile** — then we will continue in this thread with your goals and plans.",
-        },
-      ]);
+      resetGuided();
       setBannerTone("neutral");
       setBanner(null);
     } catch {
@@ -406,7 +375,7 @@ export function ProfileIntelligenceGeminiChat() {
     } finally {
       setExtractBusy(false);
     }
-  }, [resumePath]);
+  }, [resetGuided, resumePath]);
 
   const saveExtractionToProfile = useCallback(async () => {
     if (!resumePath || !parsedResume) {
@@ -439,6 +408,7 @@ export function ProfileIntelligenceGeminiChat() {
         return;
       }
       setSavedToProfile(true);
+      setGuidedStep(1);
       const sc = json.data?.profile_completeness_score;
       setBannerTone("success");
       setBanner(
@@ -446,7 +416,6 @@ export function ProfileIntelligenceGeminiChat() {
           ? `Saved to your profile. Completeness is around ${sc}%.`
           : "Saved to your profile."
       );
-      setMessages((prev) => [...prev, { id: uid(), role: "assistant", content: FIRST_FOLLOWUP }]);
     } catch {
       setBannerTone("error");
       setBanner("Network error while saving.");
@@ -455,102 +424,64 @@ export function ProfileIntelligenceGeminiChat() {
     }
   }, [parsedResume, resumePath]);
 
-  const appendChatNotes = useCallback(async (userLine: string, assistantLine: string) => {
-    const block = `Profile coach (Gemini)\nUser: ${userLine}\nAssistant: ${assistantLine.slice(0, 3500)}`;
-    try {
-      await fetch("/api/user/profile-chat-notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ block }),
-      });
-    } catch {
-      /* non-blocking */
+  const submitGuidedGoals = useCallback(async () => {
+    if (!gConf) {
+      setBannerTone("error");
+      setBanner("Choose whether you feel confident or still exploring.");
+      return;
     }
-  }, []);
-
-  const streamAssistant = useCallback(
-    async (history: ChatMessage[]) => {
-      const payload = history.map((m) => ({ role: m.role, content: m.content }));
-      const res = await fetch("/api/ai/profile-intelligence-chat", {
+    setHubBusy(true);
+    setBanner("Updating your personalized insights...");
+    setBannerTone("neutral");
+    try {
+      const res = await fetch("/api/ai/profile-builder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: "chat",
-          messages: payload,
-          extracted_context: extractedContext || undefined,
+          mode: "guided_goals",
+          target_role: gRole.trim(),
+          domain: gDomain.trim(),
+          five_year_goal: gFive.trim(),
+          confidence_mode: gConf === "confident" ? "confident" : "exploring",
+          additional_preference: gExtra.trim() || undefined,
         }),
       });
-      if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let err = raw.trim() || `Chat request failed (${res.status}).`;
-        try {
-          const j = JSON.parse(raw) as { error?: string };
-          if (j?.error) err = j.error;
-        } catch {
-          /* plain-text error body */
-        }
-        throw new Error(err);
-      }
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response stream.");
-      const dec = new TextDecoder();
-      let acc = "";
-      const assistantId = uid();
-      const lastUser = [...history].reverse().find((m) => m.role === "user");
-      setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }]);
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        acc += dec.decode(value, { stream: true });
-        setMessages((prev) =>
-          prev.map((m) => (m.id === assistantId ? { ...m, content: acc } : m))
-        );
-      }
-      if (lastUser?.content.trim() && acc.trim()) {
-        void appendChatNotes(lastUser.content.trim(), acc.trim());
-      }
-    },
-    [appendChatNotes, extractedContext]
-  );
-
-  const sendUserText = useCallback(
-    async (text: string): Promise<boolean> => {
-      const trimmed = text.trim();
-      if (!trimmed || streamBusy) return false;
-      if (!chatUnlocked) {
+      const json = (await res.json()) as { success?: boolean; error?: string };
+      if (!res.ok || !json.success) {
         setBannerTone("error");
-        setBanner("Save your résumé extraction to your profile first — then chat unlocks.");
-        return false;
+        setBanner(json.error ?? "Could not save goals.");
+        return;
       }
-      setBanner(null);
-      setBannerTone("neutral");
-      setStreamBusy(true);
-      const userMsg: ChatMessage = { id: uid(), role: "user", content: trimmed };
-      const prior = messagesRef.current;
-      const next = [...prior, userMsg];
-      setMessages(next);
-      try {
-        await streamAssistant(next);
-        return true;
-      } catch (e) {
-        setBannerTone("error");
-        setBanner(e instanceof Error ? e.message : "Chat failed.");
-        setMessages(prior);
-        return false;
-      } finally {
-        setStreamBusy(false);
-      }
-    },
-    [chatUnlocked, streamAssistant, streamBusy]
-  );
+      await fetch("/api/profile-hub?refresh=1", { credentials: "include", cache: "no-store" });
+      window.dispatchEvent(new Event("gr-feature-refresh"));
+      setGoalsDone(true);
+      setBannerTone("success");
+      setBanner("Your personalized insights are updating — taking you to Home…");
+      window.setTimeout(() => {
+        router.push("/dashboard");
+      }, 1600);
+    } catch {
+      setBannerTone("error");
+      setBanner("Network error while refreshing.");
+    } finally {
+      setHubBusy(false);
+    }
+  }, [gConf, gDomain, gExtra, gFive, gRole, router]);
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const t = input;
-    void sendUserText(t).then((ok) => {
-      if (ok) setInput("");
-    });
-  };
+  const stepTitle = (() => {
+    switch (guidedStep) {
+      case 1:
+        return "Target role";
+      case 2:
+        return "Preferred domain";
+      case 3:
+        return "Five-year goal";
+      case 4:
+        return "Confident or exploring?";
+      default:
+        return "Additional preference";
+    }
+  })();
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-24 pt-4">
@@ -570,8 +501,8 @@ export function ProfileIntelligenceGeminiChat() {
           Profile coach
         </h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-          Upload your résumé, review what Gemini extracted, save it to your profile, then continue
-          here — goals, countries, and priorities stay in one thread and feed the rest of GradRight.
+          Upload your résumé, save the structured extraction, then answer exactly five questions so
+          your dashboard, explore feed, and funding views stay aligned with your goals.
         </p>
       </header>
 
@@ -583,20 +514,20 @@ export function ProfileIntelligenceGeminiChat() {
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Live thread
+                Résumé + goals
               </p>
-              <p className="font-heading text-lg font-semibold text-foreground">Gemini coach</p>
+              <p className="font-heading text-lg font-semibold text-foreground">Profile coach</p>
             </div>
           </div>
-          {streamBusy ? (
+          {hubBusy ? (
             <span className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1.5 text-xs text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              Writing…
+              Updating insights…
             </span>
           ) : savedToProfile ? (
             <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-              Profile linked
+              Résumé linked
             </span>
           ) : null}
         </div>
@@ -611,7 +542,7 @@ export function ProfileIntelligenceGeminiChat() {
                     {uploading ? "Uploading…" : "Résumé file"}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {resumePath ? resumePath.split("/").pop() : "PDF or TXT — tap to browse"}
+                    {resumePath ? resumePath.split("/").pop() : "PDF — tap to browse"}
                   </p>
                 </div>
               </div>
@@ -689,116 +620,151 @@ export function ProfileIntelligenceGeminiChat() {
           </div>
         ) : null}
 
-        <div
-          ref={scrollRef}
-          className="min-h-[280px] space-y-5 overflow-y-auto px-5 py-6"
-          style={{ maxHeight: "min(58vh, 640px)" }}
-        >
-          <AnimatePresence initial={false}>
-            {messages.map((m) => (
-              <motion.div
-                key={m.id}
-                layout
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={cn("flex gap-3", m.role === "user" ? "flex-row-reverse" : "flex-row")}
-              >
-                <div
-                  className={cn(
-                    "mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl border text-xs shadow-sm",
-                    m.role === "user"
-                      ? "border-border/80 bg-background text-muted-foreground"
-                      : "border-brand-primary/35 bg-brand-soft text-brand-primary"
-                  )}
-                >
-                  {m.role === "user" ? (
-                    <User className="h-[18px] w-[18px]" aria-hidden />
-                  ) : (
-                    <Bot className="h-[18px] w-[18px]" aria-hidden />
-                  )}
-                </div>
-                <div
-                  className={cn(
-                    "min-w-0 max-w-[min(100%,720px)] rounded-2xl border px-5 py-4 shadow-sm",
-                    m.role === "user"
-                      ? "border-brand-primary/20 bg-gradient-to-br from-brand-primary/12 via-brand-primary/8 to-brand-secondary/10"
-                      : "border-border/60 bg-card/95 backdrop-blur-sm"
-                  )}
-                >
-                  <Markdownish text={m.content} />
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {chatUnlocked ? (
-          <div className="border-t border-border/50 bg-muted/10 px-4 py-4">
-            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Suggested follow-ups
+        {goalsDone ? (
+          <div className="border-t border-border/50 px-5 py-10 text-center">
+            <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-emerald-500" aria-hidden />
+            <p className="font-heading text-lg font-semibold text-foreground">Goals saved</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Return to Home — modules refetch automatically.
             </p>
-            <div className="flex flex-wrap gap-2">
-              {PROFILE_INTEL_CHAT_SUGGESTIONS.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  disabled={streamBusy}
-                  onClick={() => void sendUserText(s.prompt)}
-                  className="rounded-full border border-border/70 bg-background/95 px-3.5 py-2 text-left text-xs font-medium text-foreground shadow-sm transition hover:border-brand-primary/45 hover:bg-brand-soft/50 disabled:opacity-50"
-                >
-                  {s.label}
-                </button>
-              ))}
+            <Link
+              href="/dashboard"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-md transition hover:opacity-95"
+            >
+              Open dashboard
+            </Link>
+          </div>
+        ) : savedToProfile ? (
+          <div className="border-t border-border/50 px-5 py-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Step {guidedStep} of 5 · {stepTitle}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Exactly five questions — used to personalize research and scoring across the product.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              {guidedStep === 1 ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-foreground">1. Target role</span>
+                  <input
+                    value={gRole}
+                    onChange={(e) => setGRole(e.target.value)}
+                    placeholder="e.g. AI Engineer"
+                    className="w-full rounded-xl border border-input bg-background px-4 py-3 text-[15px] outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/50"
+                  />
+                </label>
+              ) : null}
+
+              {guidedStep === 2 ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-foreground">2. Preferred domain</span>
+                  <input
+                    value={gDomain}
+                    onChange={(e) => setGDomain(e.target.value)}
+                    placeholder="e.g. Computer Vision"
+                    className="w-full rounded-xl border border-input bg-background px-4 py-3 text-[15px] outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/50"
+                  />
+                </label>
+              ) : null}
+
+              {guidedStep === 3 ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-foreground">3. Five-year goal</span>
+                  <textarea
+                    value={gFive}
+                    onChange={(e) => setGFive(e.target.value)}
+                    placeholder="Where you want to be — include region if it matters."
+                    rows={4}
+                    className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-[15px] outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/50"
+                  />
+                </label>
+              ) : null}
+
+              {guidedStep === 4 ? (
+                <div className="space-y-3">
+                  <span className="text-sm font-medium text-foreground">
+                    4. Are you confident or still exploring?
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={gConf === "confident" ? "default" : "outline"}
+                      className="rounded-xl"
+                      onClick={() => setGConf("confident")}
+                    >
+                      Confident
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={gConf === "exploring" ? "default" : "outline"}
+                      className="rounded-xl"
+                      onClick={() => setGConf("exploring")}
+                    >
+                      Exploring
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+
+              {guidedStep === 5 ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-foreground">
+                    5. Any additional preference (optional)
+                  </span>
+                  <textarea
+                    value={gExtra}
+                    onChange={(e) => setGExtra(e.target.value)}
+                    placeholder="Scholarships, city size, company type — or leave blank."
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-[15px] outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/50"
+                  />
+                </label>
+              ) : null}
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                {guidedStep > 1 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-xl"
+                    disabled={hubBusy}
+                    onClick={() => setGuidedStep((s) => Math.max(1, s - 1))}
+                  >
+                    Back
+                  </Button>
+                ) : null}
+                {guidedStep < 5 ? (
+                  <Button
+                    type="button"
+                    className="rounded-xl"
+                    disabled={!canAdvance() || hubBusy}
+                    onClick={() => setGuidedStep((s) => Math.min(5, s + 1))}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="rounded-xl"
+                    disabled={hubBusy || !canAdvance()}
+                    onClick={() => void submitGuidedGoals()}
+                  >
+                    {hubBusy ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                    ) : null}
+                    Save & refresh
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        ) : null}
-
-        <form
-          onSubmit={onSubmit}
-          className="flex gap-3 border-t border-border/60 bg-background/90 p-4 md:p-5"
-        >
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                const t = input;
-                void sendUserText(t).then((ok) => {
-                  if (ok) setInput("");
-                });
-              }
-            }}
-            rows={2}
-            disabled={streamBusy}
-            placeholder={
-              chatUnlocked
-                ? "Reply in your own words, or tap a chip above…"
-                : "Save your extraction above to unlock the conversation."
-            }
-            className="min-h-[52px] flex-1 resize-none rounded-xl border border-input bg-background px-4 py-3 text-[15px] leading-snug outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-55"
-          />
-          <Button
-            type="submit"
-            disabled={streamBusy || !input.trim() || !chatUnlocked}
-            className="h-auto min-w-[52px] shrink-0 self-end rounded-xl px-5"
-            size="lg"
-          >
-            {streamBusy ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-            ) : (
-              <Send className="h-5 w-5" aria-hidden />
-            )}
-            <span className="sr-only">Send</span>
-          </Button>
-        </form>
+        ) : (
+          <div className="border-t border-border/50 px-5 py-8 text-sm text-muted-foreground">
+            Save your résumé extraction above to unlock the five-question goal flow.
+          </div>
+        )}
       </GlassCard>
-
-      {aspirationFromChat.length > 80 && chatUnlocked ? (
-        <p className="px-1 text-center text-xs text-muted-foreground">
-          Your replies in this thread are appended to your profile notes for downstream modules.
-        </p>
-      ) : null}
     </div>
   );
 }

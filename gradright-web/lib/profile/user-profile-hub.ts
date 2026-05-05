@@ -38,6 +38,8 @@ export type ProfileHubCoachTurn = {
 export type ProfileHubSystemState = {
   profile_completeness?: number;
   last_updated?: string;
+  /** Successful grounded web searches consumed (cap enforced server-side). */
+  grounded_search_count?: number;
 };
 
 export type ProfileHubDecisionCache = {
@@ -158,6 +160,7 @@ export function normalizeProfileHub(raw: unknown): ProfileHubV1 {
 
   if (isRecord(raw.system)) {
     const pc = raw.system.profile_completeness;
+    const gsc = raw.system.grounded_search_count;
     hub.system = {
       profile_completeness:
         typeof pc === "number" ? Math.min(100, Math.max(0, pc)) : undefined,
@@ -165,6 +168,8 @@ export function normalizeProfileHub(raw: unknown): ProfileHubV1 {
         typeof raw.system.last_updated === "string"
           ? raw.system.last_updated
           : undefined,
+      grounded_search_count:
+        typeof gsc === "number" ? Math.min(100, Math.max(0, Math.floor(gsc))) : undefined,
     };
   }
 
@@ -223,7 +228,10 @@ export function applyProfileHubPatch(
     grounded_context:
       patch.grounded_context !== undefined ? patch.grounded_context : hub.grounded_context,
     coach_turns: patch.appendCoachTurn ? coach : hub.coach_turns ?? [],
-    system: patch.system !== undefined ? patch.system : hub.system,
+    system:
+      patch.system !== undefined
+        ? { ...hub.system, ...patch.system }
+        : hub.system,
     decision_cache:
       patch.decision_cache === undefined
         ? hub.decision_cache

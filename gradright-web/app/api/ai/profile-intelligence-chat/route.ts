@@ -158,10 +158,7 @@ export async function POST(request: Request): Promise<Response | NextResponse> {
   }
 
   if (!getGeminiApiKey()) {
-    return NextResponse.json(
-      apiError("AI is not configured. Set GEMINI_API_KEY in your environment."),
-      { status: 503 }
-    );
+    return NextResponse.json(apiError("Service temporarily unavailable."), { status: 503 });
   }
 
   let json: unknown;
@@ -256,8 +253,8 @@ export async function POST(request: Request): Promise<Response | NextResponse> {
     return NextResponse.json(
       apiError(
         lastReason === "key_missing"
-          ? "GEMINI_API_KEY is missing."
-          : "Extraction did not return usable data. Try another PDF export or check your API quota."
+          ? "Assistant service unavailable."
+          : "Extraction did not return usable data. Try another PDF export or try again shortly."
       ),
       { status: 503 }
     );
@@ -269,7 +266,7 @@ export async function POST(request: Request): Promise<Response | NextResponse> {
   }
 
   const ctx = ch.data.extracted_context?.trim() ?? "";
-  const system = `You are GradRight Profile Intelligence — a concise, warm coach. You help students planning graduate study abroad. You run on Google Gemini.
+  const system = `You are GradRight Profile Intelligence — a concise, warm coach. You help students planning graduate study abroad.
 Rules:
 - Short paragraphs; prefer bullets when listing ideas.
 - Never shame; frame gaps as next steps.

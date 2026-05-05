@@ -38,10 +38,18 @@ export const groundedStudentInsightSchema = z.object({
   summary: z.string().max(1200),
 });
 
+/** Short structured facts from COL / visa searches (parameterized queries). */
+export const groundedTopicRowSchema = z.object({
+  topic: z.string().max(400),
+  detail: z.string().max(1200),
+});
+
 export const groundedContextSchema = z.object({
   universities: z.array(groundedUniversityRowSchema).max(36),
   job_market: groundedJobMarketSchema,
   student_insights: z.array(groundedStudentInsightSchema).max(20),
+  cost_data: z.array(groundedTopicRowSchema).max(24).default([]),
+  visa_data: z.array(groundedTopicRowSchema).max(24).default([]),
   last_updated: z.string(),
   /** Hash of profile signals; regeneration when profile changes. */
   search_fingerprint: z.string().max(128).optional(),
@@ -50,7 +58,11 @@ export const groundedContextSchema = z.object({
 export type GroundedUniversityRow = z.infer<typeof groundedUniversityRowSchema>;
 export type GroundedJobMarket = z.infer<typeof groundedJobMarketSchema>;
 export type GroundedStudentInsight = z.infer<typeof groundedStudentInsightSchema>;
+export type GroundedTopicRow = z.infer<typeof groundedTopicRowSchema>;
 export type GroundedContextV1 = z.infer<typeof groundedContextSchema>;
+
+/** Max successful grounded searches per user (stored in profile_hub.system). */
+export const MAX_GROUNDED_SEARCHES_PER_USER = 3;
 
 export const EMPTY_GROUNDED_JOB_MARKET: GroundedJobMarket = {
   roles: [],
@@ -190,7 +202,8 @@ export function finalizeGroundedContext(
     last_updated: now,
     search_fingerprint: fingerprint,
   };
-  return parseGroundedContextUnknown(merged);
+  const parsed = parseGroundedContextUnknown(merged);
+  return parsed;
 }
 
 /** Compact digest for mentor prompts — structured only, capped length. */
@@ -217,12 +230,24 @@ export function formatGroundedContextForPrompt(ctx: GroundedContextV1 | null | u
     .slice(0, 6)
     .map((s) => `- ${s.title}: ${s.summary}`)
     .join("\n");
+  const cost = (ctx.cost_data ?? [])
+    .slice(0, 8)
+    .map((r) => `- ${r.topic}: ${r.detail}`)
+    .join("\n");
+  const visa = (ctx.visa_data ?? [])
+    .slice(0, 8)
+    .map((r) => `- ${r.topic}: ${r.detail}`)
+    .join("\n");
   const body = [
     `last_updated: ${ctx.last_updated}`,
     "UNIVERSITIES (tiered to this profile):",
     uni || "(none)",
     "JOB_MARKET (role-specific):",
     jobBlock,
+    "COST_OF_LIVING:",
+    cost || "(none)",
+    "VISA_ADMISSION:",
+    visa || "(none)",
     "STUDENT_REALITY:",
     ins || "(none)",
   ].join("\n\n");
@@ -234,41 +259,53 @@ export function emptyGroundedContextPlaceholder(isoNow: string): GroundedContext
     universities: [],
     job_market: { ...EMPTY_GROUNDED_JOB_MARKET },
     student_insights: [],
+    cost_data: [],
+    visa_data: [],
     last_updated: isoNow,
   };
 }
 
 /**
- * Build one Gemini prompt that encodes profile-specific search intent per country
- * (universities, job market, student reality). No generic study-abroad queries.
+ * Build one research prompt: parameterized search templates per country + field + CGPA band + role.
  */
 export function buildGroundedSearchUserPrompt(signals: ProfileSignals): string {
+  const year = new Date().getFullYear();
   const countryBlocks = signals.countries
     .map((country) => {
+      const uniQ = `best universities for ${signals.field} in ${country} for students with CGPA ${signals.cgpa_band} admission requirements acceptance rate tuition fees`;
+      const jobQ = `${signals.role} jobs in ${country} salary demand skills required ${year} job outlook`;
+      const costQ = `cost of living for students in ${country} monthly expenses rent tuition total cost for ${signals.field}`;
+      const visaQ = `student visa process ${country} requirements processing time international students ${signals.field}`;
+      const insightQ = `student experience studying ${signals.field} in ${country} pros cons job placement outcomes`;
+
       return `
 ### Country: ${country}
-Use Google Search to research ONLY material relevant to this student profile:
-- Field of study: ${signals.field}
-- Degree intent: ${signals.degree_type || "graduate program"}
-- Academic band: ${signals.cgpa_band} (numeric CGPA context: ${signals.cgpa} / 10 scale)
-- Target career role: ${signals.role}
+Run searches aligned to these exact intents (derive facts into JSON fields below):
+- UNIVERSITIES :: "${uniQ}"
+- JOB_MARKET :: "${jobQ}"
+- COST :: "${costQ}"
+- VISA :: "${visaQ}"
+- STUDENT_INSIGHTS :: "${insightQ}"
 
-You must address these three research tracks for ${country} (no generic "top universities abroad"):
-(1) UNIVERSITIES — List universities in ${country} suited to ${signals.field} students at ${signals.cgpa_band}. For EACH university output: fit_reason (why it matches this profile), gaps (what this student may lack vs typical admits), actions_to_improve (concrete next steps), admission_probability (qualitative band, not a guarantee), plus acceptance_rate, requirements, fees, timeline; tier as safe | moderate | ambitious **for this profile** (ranked / actionable, not generic prestige lists).
-(2) JOB MARKET — For role "${signals.role}" in ${country}: career path, salary bands (ranges as strings), hiring demand, entry vs mid roles, skills employers emphasize, notable hiring companies.
-(3) STUDENT REALITY — Authentic challenges for ${signals.field} students in ${country}: visa/cost/job outlook themes grounded in search results.
+Profile anchors (keep everything tied to these): field=${signals.field}; degree=${signals.degree_type || "graduate"}; CGPA band=${signals.cgpa_band} (numeric ${signals.cgpa}/10); target_role=${signals.role}.
+
+For UNIVERSITIES in ${country}: tier safe|moderate|ambitious for this profile; fit_reason, gaps, actions_to_improve, admission_probability (qualitative), acceptance_rate, requirements, fees, timeline.
+For JOB MARKET (aggregate across countries later): stay specific to "${signals.role}" in ${country}.
+For COST_DATA: array of { topic, detail } from the COST query (rent, food, tuition stressors).
+For VISA_DATA: array of { topic, detail } from the VISA query (processing, funds, timeline).
+For STUDENT_INSIGHTS: title + summary from STUDENT_INSIGHTS query.
 
 `;
     })
     .join("\n");
 
-  return `You are compiling structured orientation data for ONE student. Every sentence must be tied to their field (${signals.field}), countries (${signals.countries.join(
+  return `You are compiling structured orientation data for ONE student. Every field must map to their field (${signals.field}), destinations (${signals.countries.join(
     ", "
-  )}), CGPA band (${signals.cgpa_band}), and target role (${signals.role}). Do not answer with generic worldwide rankings unrelated to this profile.
+  )}), CGPA band (${signals.cgpa_band}), and target role (${signals.role}). No generic worldwide prestige lists.
 
 ${countryBlocks}
 
-Aggregate job_market across the listed countries into ONE summary object (roles, salary_range, skills, companies) that stays specific to "${signals.role}" and these destinations.
+Aggregate job_market across countries into ONE object (roles, salary_range, skills, companies) specific to "${signals.role}" and these destinations.
 
 Respond with a single JSON object ONLY (no markdown) matching this schema:
 {
@@ -294,9 +331,11 @@ Respond with a single JSON object ONLY (no markdown) matching this schema:
     "companies": string[]
   },
   "student_insights": [ { "title": string, "summary": string } ],
+  "cost_data": [ { "topic": string, "detail": string } ],
+  "visa_data": [ { "topic": string, "detail": string } ],
   "last_updated": "<ISO-8601 timestamp>"
 }
-Cap universities at 24 total across all countries; keep strings concise; use empty arrays if search yields nothing credible.`;
+Cap universities at 24 total; cap cost_data and visa_data at 12 entries each; use empty arrays if nothing credible.`;
 }
 
 export const GROUNDED_SEARCH_SYSTEM = `You are a research synthesizer. You must use Google Search grounding when available. Output ONLY valid JSON as specified — no markdown fences, no commentary, no long prose fields. Each field must be short, factual, and explicitly tied to the student's field, destination countries, CGPA band, and target role. If uncertain, use shorter conservative statements rather than invention.`;

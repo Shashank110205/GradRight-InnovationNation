@@ -1,3 +1,4 @@
+import { MAX_GROUNDED_SEARCHES_PER_USER } from "@/lib/profile/grounded-context";
 import { PROFILE_HUB_VERSION, getProfileHubFromUserMetadata } from "@/lib/profile/user-profile-hub";
 
 /**
@@ -21,6 +22,11 @@ export function buildProfileHubApiPayload(userMetadata: Record<string, unknown>)
             ? hub.system.profile_completeness
             : null,
         last_updated: hub.system?.last_updated ?? null,
+        grounded_search_count:
+          typeof hub.system?.grounded_search_count === "number"
+            ? hub.system.grounded_search_count
+            : 0,
+        grounded_search_cap: MAX_GROUNDED_SEARCHES_PER_USER,
       },
       resume_gemini: hub.resume_gemini ?? null,
       coach_turns: hub.coach_turns ?? [],

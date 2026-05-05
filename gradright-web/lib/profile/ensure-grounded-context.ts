@@ -4,6 +4,7 @@ import { tryParseJsonObject, generateGeminiWithGoogleSearch } from "@/lib/ai/pro
 import { getGeminiApiKey } from "@/lib/ai/env";
 import {
   GROUNDED_SEARCH_SYSTEM,
+  MAX_GROUNDED_SEARCHES_PER_USER,
   buildGroundedSearchUserPrompt,
   extractProfileSignalsFromUserMetadata,
   finalizeGroundedContext,
@@ -53,6 +54,17 @@ export async function ensureGroundedProfileContext(
       context: existing,
       fromCache: true,
       refreshed: false,
+    };
+  }
+
+  const used = hub.system?.grounded_search_count ?? 0;
+  if (used >= MAX_GROUNDED_SEARCHES_PER_USER) {
+    return {
+      metadata: prevUserMetadata,
+      context: existing,
+      fromCache: true,
+      refreshed: false,
+      skip_reason: "grounded_search_quota_exceeded",
     };
   }
 
@@ -123,8 +135,17 @@ export async function ensureGroundedProfileContext(
     };
   }
 
+  const nextCount = Math.min(
+    MAX_GROUNDED_SEARCHES_PER_USER,
+    (hub.system?.grounded_search_count ?? 0) + 1
+  );
   const nextMeta = applyProfileHubPatch(prevUserMetadata, {
     grounded_context: finalized,
+    system: {
+      ...hub.system,
+      grounded_search_count: nextCount,
+      last_updated: new Date().toISOString(),
+    },
   });
   const { error } = await supabase.auth.updateUser({ data: nextMeta });
   if (error) {

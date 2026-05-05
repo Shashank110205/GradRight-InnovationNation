@@ -80,6 +80,33 @@ export async function middleware(request: NextRequest) {
   const search = request.nextUrl.search;
   const isNbfcPortal = process.env.NEXT_PUBLIC_PORTAL_MODE === "nbfc";
 
+  /** Dev-only routing: student app (3000) must not expose NBFC console; NBFC app (3001) sends student hub traffic to the student origin. */
+  const host = request.headers.get("host") ?? "";
+  const isLocalHost =
+    host.startsWith("localhost:") ||
+    host.startsWith("127.0.0.1:") ||
+    host === "localhost";
+  const portMatch = host.match(/:(\d+)$/);
+  const hostPort = portMatch ? parseInt(portMatch[1], 10) : null;
+
+  if (isLocalHost && !isNbfcPortal && pathname.startsWith("/nbfc")) {
+    return NextResponse.redirect(new URL(`/dashboard${search}`, request.url));
+  }
+
+  const studentOrigin = process.env.NEXT_PUBLIC_STUDENT_ORIGIN ?? "http://localhost:3000";
+  if (
+    isLocalHost &&
+    isNbfcPortal &&
+    hostPort === 3001 &&
+    isStudentJourneyPath(pathname) &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/nbfc") &&
+    pathname !== "/sign-in" &&
+    pathname !== "/sign-up"
+  ) {
+    return NextResponse.redirect(new URL(`${pathname}${search}`, studentOrigin));
+  }
+
   let studentFlowMemo: StudentFlowSnapshot | undefined;
 
   async function loadStudentFlow(): Promise<StudentFlowSnapshot> {

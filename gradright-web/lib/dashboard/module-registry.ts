@@ -60,20 +60,20 @@ export const HUB_SIDEBAR_SECTIONS: readonly HubSidebarSection[] = [
     activePrefixes: ["/explore", "/career"],
     children: [
       { href: "/explore", label: "Discover feed", featureApi: "/api/features/discover" },
-      { href: "/career", label: "Career exploration", featureApi: "/api/features/career" },
+      { href: "/career", label: "Career Paths", featureApi: "/api/features/career" },
       {
         href: "/explore/articles/country-guides-overview",
-        label: "Country guides",
+        label: "Study Destinations",
         featureApi: "/api/features/countries",
       },
       {
         href: "/career/navigator",
-        label: "University explorer",
+        label: "Find Universities",
         featureApi: "/api/features/universities",
       },
       {
         href: "/explore/articles/admissions-explained",
-        label: "Admission guidance",
+        label: "How Admissions Work",
         featureApi: "/api/features/admission-guide",
       },
       {
@@ -87,13 +87,8 @@ export const HUB_SIDEBAR_SECTIONS: readonly HubSidebarSection[] = [
         featureApi: "/api/features/scholarships",
       },
       {
-        href: "/explore/articles/requirements-by-goal",
-        label: "Requirements",
-        featureApi: "/api/features/requirements",
-      },
-      {
         href: "/explore/articles/financial-literacy-abroad",
-        label: "Financial literacy",
+        label: "Money basics abroad",
         featureApi: "/api/features/financial-literacy",
       },
     ],
@@ -109,31 +104,31 @@ export const HUB_SIDEBAR_SECTIONS: readonly HubSidebarSection[] = [
     children: [
       {
         href: "/plan/admission",
-        label: "Admission predictor",
+        label: "Your Chances",
         featureApi: "/api/features/admission-predictor",
       },
       {
         href: "/career",
-        label: "Job outlook (3 / 6 / 12 mo)",
+        label: "Career Outcomes",
         featureApi: "/api/features/job-outlook",
       },
-      { href: "/funding#roi", label: "ROI lens", featureApi: "/api/features/roi" },
+      { href: "/funding#roi", label: "Return on Investment", featureApi: "/api/features/roi" },
       {
         href: "/plan/timeline",
-        label: "Timeline & deadlines",
+        label: "Your Timeline",
         featureApi: "/api/features/timeline",
       },
       {
         href: "/plan/timeline",
-        label: "Application checklist",
+        label: "Application Guide",
         featureApi: "/api/features/checklist",
       },
       {
         href: "/career/navigator",
-        label: "Skill roadmap",
+        label: "Skills You Need",
         featureApi: "/api/features/skill-roadmap",
       },
-      { href: "/plan/gre", label: "GRE estimator", featureApi: "/api/features/gre" },
+      { href: "/plan/gre", label: "Exam Strategy", featureApi: "/api/features/gre" },
     ],
   },
   {
@@ -147,35 +142,35 @@ export const HUB_SIDEBAR_SECTIONS: readonly HubSidebarSection[] = [
     children: [
       {
         href: "/funding#cost-planner",
-        label: "Cost planner",
+        label: "Total Cost",
         featureApi: "/api/features/cost-planner",
       },
       {
         href: "/funding#living",
-        label: "Living expenses",
+        label: "Living Costs",
         featureApi: "/api/features/living-expenses",
       },
       {
         href: "/explore/articles/scholarship-strategy-starter",
-        label: "Scholarship strategy",
+        label: "Scholarships",
         featureApi: "/api/features/scholarship-strategy",
       },
       {
         href: "/funding#readiness",
-        label: "Funding readiness",
+        label: "Can You Afford It?",
         featureApi: "/api/features/funding-readiness",
       },
       {
         href: "/funding#smart-financing",
-        label: "Smart financing",
+        label: "Financing Options",
         featureApi: "/api/features/financial-literacy",
       },
       {
         href: "/funding#emi",
-        label: "EMI understanding",
+        label: "Monthly Payments",
         featureApi: "/api/features/financial-literacy",
       },
-      { href: "/apply", label: "Secure funding (when ready)" },
+      { href: "/apply", label: "Get Funding" },
     ],
   },
   {
@@ -187,17 +182,17 @@ export const HUB_SIDEBAR_SECTIONS: readonly HubSidebarSection[] = [
     icon: "users",
     activePrefixes: ["/connect"],
     children: [
-      { href: "/connect#mentor", label: "AI mentor", featureApi: "/api/features/mentor" },
-      { href: "/connect#community", label: "Community", featureApi: "/api/features/community" },
-      { href: "/connect#peers", label: "Peer groups", featureApi: "/api/features/peers" },
+      { href: "/connect#mentor", label: "Your Mentor", featureApi: "/api/features/mentor" },
+      { href: "/connect#community", label: "Student Community", featureApi: "/api/features/community" },
+      { href: "/connect#peers", label: "Peer Network", featureApi: "/api/features/peers" },
       {
         href: "/connect#alerts",
-        label: "Notifications",
+        label: "Updates",
         featureApi: "/api/features/notifications",
       },
       {
         href: "/dashboard/score-upgrade",
-        label: "Profile deepening",
+        label: "Improve Profile",
         featureApi: "/api/features/profile-deepening",
       },
     ],

@@ -1,16 +1,11 @@
-import { assembleHomeDashboardPayload } from "@/lib/features/assemble-home-dashboard";
+import { buildHomeFeatureData } from "@/lib/features/feature-payloads";
+import { jsonFeatureResponse } from "@/lib/features/json-feature-response";
 import { requireStudentFeatureAuth } from "@/lib/features/student-auth";
-import { apiSuccessMeta } from "@/lib/types";
-import { NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse> {
   const auth = await requireStudentFeatureAuth();
   if (!auth.ok) return auth.response;
-  const data = await assembleHomeDashboardPayload(auth.ctx);
-  return NextResponse.json(
-    apiSuccessMeta(data, { feature: "home", version: 1 }),
-    {
-      headers: { "Cache-Control": "private, no-store" },
-    }
-  );
+  const data = await buildHomeFeatureData(auth.ctx);
+  return jsonFeatureResponse(auth.ctx, data);
 }
