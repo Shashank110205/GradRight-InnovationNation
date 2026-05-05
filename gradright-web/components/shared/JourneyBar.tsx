@@ -44,6 +44,7 @@ export function JourneyBar({ currentStage }: { currentStage: JourneyStage }) {
               ) : null}
               <Link
                 href={href}
+                prefetch
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors md:px-3 md:text-sm",
                   isCurrent &&

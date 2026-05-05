@@ -18,6 +18,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { AppUserMenu } from "@/components/shared/AppUserMenu";
+import { DashboardNavDataProvider } from "@/components/student/dashboard/DashboardNavDataContext";
 import {
   HUB_MOBILE_PRIMARY,
   HUB_SIDEBAR_SECTIONS,
@@ -88,6 +89,7 @@ function SidebarSectionBlock({
     return (
       <Link
         href="/dashboard"
+        prefetch
         onClick={onNavigate}
         className={cn(
           "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors",
@@ -114,6 +116,7 @@ function SidebarSectionBlock({
       >
         <Link
           href={section.href}
+          prefetch
           onClick={onNavigate}
           className={cn(
             "flex min-w-0 flex-1 items-center gap-3 rounded-l-lg px-2 py-2 text-sm font-medium transition-colors",
@@ -160,6 +163,7 @@ function SidebarSectionBlock({
               <li key={`${section.id}:${c.href}:${c.label}`}>
                 <Link
                   href={c.href}
+                  prefetch
                   onClick={onNavigate}
                   className={cn(
                     "block rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
@@ -249,6 +253,7 @@ export function DashboardShell({
   }
 
   return (
+    <DashboardNavDataProvider>
     <div className="flex min-h-screen bg-background">
       {mobileOpen ? (
         <button
@@ -270,6 +275,7 @@ export function DashboardShell({
           {!collapsed ? (
             <Link
               href="/dashboard"
+              prefetch
               className="font-heading truncate text-sm font-bold text-sidebar-foreground"
               onClick={() => setMobileOpen(false)}
             >
@@ -342,6 +348,7 @@ export function DashboardShell({
             ) : null}
             <Link
               href="/connect#community"
+              prefetch
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground shadow-sm transition hover:bg-muted active:scale-95"
               aria-label="Community and peer groups"
               title="Community"
@@ -367,6 +374,7 @@ export function DashboardShell({
             <Link
               key={item.id}
               href={item.href}
+              prefetch
               className={cn(
                 "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition-colors",
                 active ? "text-brand-primary" : "text-muted-foreground hover:text-foreground"
@@ -381,5 +389,6 @@ export function DashboardShell({
 
       <ChatbotToggleLazy appUserId={appUserId} />
     </div>
+    </DashboardNavDataProvider>
   );
 }

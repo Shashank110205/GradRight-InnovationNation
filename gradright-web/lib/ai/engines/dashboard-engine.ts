@@ -1,5 +1,5 @@
 /**
- * Dashboard engine (GEMINI_DASHBOARD_API_KEY) — strategic command center only.
+ * Dashboard engine — strategic command center only (AI: Groq → Gemini, `GEMINI_API_KEY`).
  * Consumes `StudentMasterProfile`; does not write enrichment (profile engine only).
  */
 

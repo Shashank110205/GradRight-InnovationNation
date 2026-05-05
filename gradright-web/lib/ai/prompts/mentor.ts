@@ -141,12 +141,29 @@ export function buildMentorSystemPrompt(
   profile: UserProfileContext,
   mode: MentorMode,
   master: StudentMasterProfile | null,
-  options?: { lastUserMessage?: string | null }
+  options?: {
+    lastUserMessage?: string | null;
+    /** Serialized JSON from Explore hub sessionStorage — selected tiles + targets. */
+    explore_context?: string | null;
+    /** Deterministic intelligence lines (same source as Explore WOW). */
+    intelligence_digest?: string | null;
+    /** Structured digest from `profile_hub.grounded_context` (Google Search–grounded). */
+    grounded_web_context?: string | null;
+  }
 ): string {
   const depth = inferGuidanceDepth(options?.lastUserMessage ?? null);
   const depthBlock = guidanceDepthInstructions(depth);
   const base = `${MENTOR_SYSTEM_PROMPT(profile).trim()}\n\n${depthBlock}\n\n${MODE_APPEND[mode].trim()}`;
   const appendix = engineAppendixForMode(mode, master);
-  if (!appendix) return base;
-  return `${base}\n\n${appendix}`;
+  let out = appendix ? `${base}\n\n${appendix}` : base;
+  if (options?.intelligence_digest?.trim()) {
+    out = `${out}\n\nSTUDENT_INTELLIGENCE_DIGEST (align every answer; do not contradict):\n${options.intelligence_digest.trim()}`;
+  }
+  if (options?.explore_context?.trim()) {
+    out = `${out}\n\nEXPLORE_PAGE_CONTEXT (JSON from client; ground specifics here):\n${options.explore_context.trim().slice(0, 7500)}`;
+  }
+  if (options?.grounded_web_context?.trim()) {
+    out = `${out}\n\nPROFILE_HUB_WEB_CONTEXT (structured fields from profile_hub + Google Search grounding; verify deadlines and fees on official sources):\n${options.grounded_web_context.trim()}`;
+  }
+  return out;
 }

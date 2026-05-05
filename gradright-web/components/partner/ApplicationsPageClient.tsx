@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { useSupabase } from "@/components/shared/AppProviders";
 import { ApplicationsTable } from "@/components/partner/ApplicationsTable";
+import { NbfcBestApplicantsStrip } from "@/components/partner/NbfcBestApplicantsStrip";
+import { NbfcPortfolioInsight } from "@/components/partner/NbfcPortfolioInsight";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NBFC_DEMO_PIPELINE } from "@/lib/partner/nbfc-demo-leads";
@@ -108,6 +110,7 @@ export function ApplicationsPageClient({
   );
 
   const showDemo = items.length === 0;
+  const displayItems = showDemo ? NBFC_DEMO_PIPELINE : items;
 
   return (
     <div className="space-y-6">
@@ -200,6 +203,9 @@ export function ApplicationsPageClient({
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {heading}
       </p>
+
+      <NbfcPortfolioInsight items={displayItems} />
+      <NbfcBestApplicantsStrip items={displayItems} />
 
       {showDemo ? (
         <div className="space-y-2">

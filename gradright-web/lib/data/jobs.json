@@ -1,0 +1,182 @@
+[
+  {
+    "id": "j0",
+    "title": "ML Engineer",
+    "field": "Computer Science",
+    "country": "Germany",
+    "median_salary_usd": 72000,
+    "demand_index": 55,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j1",
+    "title": "Quant Analyst",
+    "field": "Engineering",
+    "country": "United States",
+    "median_salary_usd": 126200,
+    "demand_index": 63,
+    "months_to_typical_offer": 4
+  },
+  {
+    "id": "j2",
+    "title": "Product Manager",
+    "field": "Business",
+    "country": "Canada",
+    "median_salary_usd": 90400,
+    "demand_index": 71,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j3",
+    "title": "Biostatistician",
+    "field": "Life Sciences",
+    "country": "United Kingdom",
+    "median_salary_usd": 81600,
+    "demand_index": 79,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j4",
+    "title": "Strategy Associate",
+    "field": "Data Science",
+    "country": "Australia",
+    "median_salary_usd": 72800,
+    "demand_index": 87,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j5",
+    "title": "Firmware Engineer",
+    "field": "Public Policy",
+    "country": "Netherlands",
+    "median_salary_usd": 74000,
+    "demand_index": 55,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j6",
+    "title": "UX Researcher",
+    "field": "Computer Science",
+    "country": "France",
+    "median_salary_usd": 75200,
+    "demand_index": 63,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j7",
+    "title": "Clinical Data Manager",
+    "field": "Engineering",
+    "country": "Singapore",
+    "median_salary_usd": 76400,
+    "demand_index": 71,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j8",
+    "title": "Renewables PM",
+    "field": "Business",
+    "country": "Switzerland",
+    "median_salary_usd": 77600,
+    "demand_index": 79,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j9",
+    "title": "Cybersecurity Analyst",
+    "field": "Life Sciences",
+    "country": "Ireland",
+    "median_salary_usd": 78800,
+    "demand_index": 87,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j10",
+    "title": "Data Engineer",
+    "field": "Data Science",
+    "country": "Germany",
+    "median_salary_usd": 84000,
+    "demand_index": 55,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j11",
+    "title": "Investment Banking Analyst",
+    "field": "Public Policy",
+    "country": "United States",
+    "median_salary_usd": 138200,
+    "demand_index": 63,
+    "months_to_typical_offer": 4
+  },
+  {
+    "id": "j12",
+    "title": "Supply Chain Lead",
+    "field": "Computer Science",
+    "country": "Canada",
+    "median_salary_usd": 102400,
+    "demand_index": 71,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j13",
+    "title": "Robotics SWE",
+    "field": "Engineering",
+    "country": "United Kingdom",
+    "median_salary_usd": 93600,
+    "demand_index": 79,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j14",
+    "title": "Health Economist",
+    "field": "Business",
+    "country": "Australia",
+    "median_salary_usd": 84800,
+    "demand_index": 87,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j15",
+    "title": "Cloud Architect",
+    "field": "Life Sciences",
+    "country": "Netherlands",
+    "median_salary_usd": 86000,
+    "demand_index": 55,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j16",
+    "title": "Corporate Finance",
+    "field": "Data Science",
+    "country": "France",
+    "median_salary_usd": 87200,
+    "demand_index": 63,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j17",
+    "title": "Research Scientist",
+    "field": "Public Policy",
+    "country": "Singapore",
+    "median_salary_usd": 88400,
+    "demand_index": 71,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j18",
+    "title": "DevRel Engineer",
+    "field": "Computer Science",
+    "country": "Switzerland",
+    "median_salary_usd": 89600,
+    "demand_index": 79,
+    "months_to_typical_offer": 5
+  },
+  {
+    "id": "j19",
+    "title": "SRE",
+    "field": "Engineering",
+    "country": "Ireland",
+    "median_salary_usd": 90800,
+    "demand_index": 87,
+    "months_to_typical_offer": 5
+  }
+]

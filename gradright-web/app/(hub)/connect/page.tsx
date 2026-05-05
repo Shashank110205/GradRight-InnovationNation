@@ -42,11 +42,11 @@ export default function ConnectPage() {
           <h2 className="font-heading text-lg font-semibold text-foreground">Community</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Peer lenses reduce fear: same city → same destination, same field → same country, same
-            stage → same deadlines. Live cohorts ship next; for now, use mentor + Explore to
+            stage → same deadlines. Group journeys roll out next; for now, use mentor + Explore to
             rehearse questions you&apos;d ask a senior.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li>· Mumbai → Ireland (example cohort lens)</li>
+            <li>· Mumbai → Ireland (example peer lens)</li>
             <li>· CS → USA (goal + field lens)</li>
             <li>· Intake season timeline buddies (stage lens)</li>
           </ul>
@@ -79,11 +79,13 @@ export default function ConnectPage() {
         </GlassCard>
       </section>
 
-      <section id="cohorts" className="scroll-mt-24">
+      <section id="peer-conversations" className="scroll-mt-24">
         <GlassCard className="p-6">
-          <h2 className="font-heading text-lg font-semibold text-foreground">Sample cohort threads</h2>
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Sample peer conversations
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Static previews of how regional and goal cohorts will feel — no live chat yet, but the
+            Static previews of how regional and goal threads will feel — no live chat yet, but the
             tone is intentional: calm, specific, and outcome-linked.
           </p>
           <div className="mt-5 grid gap-4 md:grid-cols-2">

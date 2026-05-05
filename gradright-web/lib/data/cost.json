@@ -1,0 +1,142 @@
+[
+  {
+    "id": "c0",
+    "country": "Germany",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1100,
+    "tuition_public_usd_year": 4500
+  },
+  {
+    "id": "c1",
+    "country": "United States",
+    "region_tier": "mid",
+    "living_monthly_usd": 1880,
+    "tuition_public_usd_year": 48000
+  },
+  {
+    "id": "c2",
+    "country": "Canada",
+    "region_tier": "affordable",
+    "living_monthly_usd": 1460,
+    "tuition_public_usd_year": 26800
+  },
+  {
+    "id": "c3",
+    "country": "United Kingdom",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1690,
+    "tuition_public_usd_year": 27200
+  },
+  {
+    "id": "c4",
+    "country": "Australia",
+    "region_tier": "mid",
+    "living_monthly_usd": 1420,
+    "tuition_public_usd_year": 27600
+  },
+  {
+    "id": "c5",
+    "country": "Netherlands",
+    "region_tier": "affordable",
+    "living_monthly_usd": 1450,
+    "tuition_public_usd_year": 28000
+  },
+  {
+    "id": "c6",
+    "country": "France",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1480,
+    "tuition_public_usd_year": 28400
+  },
+  {
+    "id": "c7",
+    "country": "Singapore",
+    "region_tier": "mid",
+    "living_monthly_usd": 1510,
+    "tuition_public_usd_year": 28800
+  },
+  {
+    "id": "c8",
+    "country": "Switzerland",
+    "region_tier": "affordable",
+    "living_monthly_usd": 1540,
+    "tuition_public_usd_year": 29200
+  },
+  {
+    "id": "c9",
+    "country": "Ireland",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1570,
+    "tuition_public_usd_year": 29600
+  },
+  {
+    "id": "c10",
+    "country": "Germany",
+    "region_tier": "mid",
+    "living_monthly_usd": 1400,
+    "tuition_public_usd_year": 4500
+  },
+  {
+    "id": "c11",
+    "country": "United States",
+    "region_tier": "affordable",
+    "living_monthly_usd": 2180,
+    "tuition_public_usd_year": 48000
+  },
+  {
+    "id": "c12",
+    "country": "Canada",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1760,
+    "tuition_public_usd_year": 30800
+  },
+  {
+    "id": "c13",
+    "country": "United Kingdom",
+    "region_tier": "mid",
+    "living_monthly_usd": 1990,
+    "tuition_public_usd_year": 31200
+  },
+  {
+    "id": "c14",
+    "country": "Australia",
+    "region_tier": "affordable",
+    "living_monthly_usd": 1720,
+    "tuition_public_usd_year": 31600
+  },
+  {
+    "id": "c15",
+    "country": "Netherlands",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1750,
+    "tuition_public_usd_year": 32000
+  },
+  {
+    "id": "c16",
+    "country": "France",
+    "region_tier": "mid",
+    "living_monthly_usd": 1780,
+    "tuition_public_usd_year": 32400
+  },
+  {
+    "id": "c17",
+    "country": "Singapore",
+    "region_tier": "affordable",
+    "living_monthly_usd": 1810,
+    "tuition_public_usd_year": 32800
+  },
+  {
+    "id": "c18",
+    "country": "Switzerland",
+    "region_tier": "major_city",
+    "living_monthly_usd": 1840,
+    "tuition_public_usd_year": 33200
+  },
+  {
+    "id": "c19",
+    "country": "Ireland",
+    "region_tier": "mid",
+    "living_monthly_usd": 1870,
+    "tuition_public_usd_year": 33600
+  }
+]

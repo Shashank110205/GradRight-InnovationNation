@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { generateGeminiText } from "@/lib/ai/gemini-text-client";
 import { CAREER_NAVIGATOR_JSON_SYSTEM } from "@/lib/ai/prompts/career-navigator";
 import { buildCareerNavigatorFallback } from "@/lib/ai/career-navigator-fallback";
 import { createServerClient } from "@/lib/db/supabase";
@@ -13,8 +14,6 @@ import {
 } from "@/lib/validations/career-navigator";
 
 export const maxDuration = 120;
-
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
 
 function stripJsonFence(text: string): string {
   return text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
@@ -55,56 +54,25 @@ function normalizeToFive(
   };
 }
 
-async function callAnthropicJson(input: CareerNavigatorPostBody): Promise<
+/** C-003: Career navigator JSON — Gemini `explore` (DISCOVER) key. */
+async function callGeminiNavigatorJson(input: CareerNavigatorPostBody): Promise<
   | { ok: true; text: string }
   | { ok: false }
 > {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
+  const res = await generateGeminiText({
+    module: "career-navigator",
+    systemInstruction: CAREER_NAVIGATOR_JSON_SYSTEM,
+    userText: JSON.stringify(input),
+    maxOutputTokens: 4096,
+    responseMimeType: "application/json",
+    temperature: 0.25,
+    signal: AbortSignal.timeout(110_000),
+  });
+  if (!res.ok) {
+    console.warn("[career-navigator] Gemini error", res.error);
     return { ok: false };
   }
-
-  const model = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
-
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 4096,
-        system: CAREER_NAVIGATOR_JSON_SYSTEM,
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify(input),
-          },
-        ],
-      }),
-      signal: AbortSignal.timeout(110_000),
-    });
-
-    if (!res.ok) {
-      console.warn("[career-navigator] Anthropic error", await res.text());
-      return { ok: false };
-    }
-
-    const data = (await res.json()) as {
-      content?: Array<{ type: string; text?: string }>;
-    };
-    const text = data.content?.find((c) => c.type === "text")?.text?.trim();
-    if (!text) {
-      return { ok: false };
-    }
-    return { ok: true, text };
-  } catch (e) {
-    console.warn("[career-navigator]", e);
-    return { ok: false };
-  }
+  return { ok: true, text: res.text };
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -147,9 +115,9 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = parsedBody.data;
 
-  const anthropic = await callAnthropicJson(body);
+  const gemini = await callGeminiNavigatorJson(body);
 
-  if (!anthropic.ok) {
+  if (!gemini.ok) {
     const data = normalizeToFive(buildCareerNavigatorFallback(body), body);
     return NextResponse.json({
       ...data,
@@ -159,7 +127,7 @@ export async function POST(req: Request): Promise<Response> {
 
   let raw: unknown;
   try {
-    raw = JSON.parse(stripJsonFence(anthropic.text));
+    raw = JSON.parse(stripJsonFence(gemini.text));
   } catch {
     const data = normalizeToFive(buildCareerNavigatorFallback(body), body);
     return NextResponse.json({
@@ -180,6 +148,6 @@ export async function POST(req: Request): Promise<Response> {
   const data = normalizeToFive(validated.data, body);
   return NextResponse.json({
     ...data,
-    _meta: { source: "anthropic" as const },
+    _meta: { source: "gemini" as const },
   });
 }

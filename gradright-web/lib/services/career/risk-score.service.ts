@@ -59,8 +59,17 @@ export async function runCareerRiskScoreForUser(opts: {
       broad_field: profile.broad_field,
       target_country: profile.target_country,
       degree_type: profile.degree_type,
+      profile_completeness_score: profile.profile_completeness_score,
+      risk_appetite: profile.risk_appetite ?? "medium",
+      career_path_clarity: profile.career_path_clarity ?? "unknown",
     },
     form_overrides: opts.body,
+    engine_readiness: {
+      profile_completeness_score: risk.profile_completeness_score ?? 0,
+      readiness_signals: risk.readiness_signals ?? {},
+      strengths: risk.strengths ?? [],
+      improvement_areas: risk.improvement_areas ?? [],
+    },
   };
 
   const row = await insertRiskScoreRecord({

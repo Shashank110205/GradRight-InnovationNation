@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import { resolveGeminiApiKey } from "@/lib/ai/resolve-gemini-api-key";
+import { getGeminiApiKey } from "@/lib/ai/env";
+import { getGeminiModelId } from "@/lib/ai/providers/gemini";
+import { logGeminiError, logGeminiRequest } from "@/lib/ai/gemini-forensic-log";
+import { safeGeminiGenerate } from "@/lib/ai/gemini-client";
 
 export type LoanOcrDocumentType =
   | "marksheet"
@@ -95,13 +98,14 @@ export async function extractLoanFieldsFromText(
   const sparse = Object.keys(base).length < 2;
   if (!sparse) return base;
 
-  const apiKey = resolveGeminiApiKey();
+  /** C-002 / C-003: document OCR assist — Gemini (single key). */
+  const apiKey = getGeminiApiKey();
   if (!apiKey) return base;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash",
+      model: getGeminiModelId(),
     });
     const prompt = `Document type: ${documentType}
 OCR text:
@@ -116,16 +120,23 @@ Return ONLY minified JSON with fields for this document type:
 - aadhaar: aadhaar_last4 (last 4 digits only)
 Omit keys you cannot infer.`;
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 400 },
+    logGeminiRequest("ocr-extract", apiKey, prompt.length);
+
+    const result = await safeGeminiGenerate({
+      module: "ocr-extract",
+      run: () =>
+        model.generateContent({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 400 },
+        }),
     });
     const out = result.response.text()?.trim();
     if (!out) return base;
     const cleaned = out.replace(/```json\s*|\s*```/g, "").trim();
     const parsed = JSON.parse(cleaned) as Record<string, unknown>;
     return { ...base, ...parsed };
-  } catch {
+  } catch (e) {
+    logGeminiError("ocr-extract", e);
     return base;
   }
 }

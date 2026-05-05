@@ -586,6 +586,7 @@ export function AdmissionPredictorClient() {
           </GlassCard>
 
           <ExplainabilityPanel
+            variant="admission"
             resultLabel="Modeled admission chance"
             resultSummary={`About ${result.admissionProbability}% modeled alignment for ${primaryUniLabel} — illustrative, not a guarantee.`}
             whyPoints={[

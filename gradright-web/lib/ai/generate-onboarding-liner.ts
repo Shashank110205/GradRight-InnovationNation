@@ -1,8 +1,7 @@
+import { generateGeminiText } from "@/lib/ai/gemini-text-client";
 import { ONBOARDING_RISK_ONE_LINER_SYSTEM } from "@/lib/ai/prompts/risk-narrator";
 import type { GradRightScore, OnboardingAnswers, RiskLabel } from "@/lib/types";
 import { parseTargetCountries } from "@/lib/types";
-
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
 
 function fallbackOneLiner(
   riskLabel: RiskLabel,
@@ -18,6 +17,7 @@ function fallbackOneLiner(
   return `Your profile reads higher-risk on placement timing; focus on internships and strengthening academics to improve outcomes in the ₹${low}–₹${high} LPA band.`;
 }
 
+/** C-003: Post-onboarding GradScore one-liner — Gemini `dashboard` key (first-touch journey copy). */
 export async function generateOnboardingRiskOneLiner(input: {
   answers: OnboardingAnswers;
   riskLabel: RiskLabel;
@@ -25,17 +25,6 @@ export async function generateOnboardingRiskOneLiner(input: {
   salaryHigh: number;
   loanEligibilityBand: GradRightScore["loan_eligibility_band"];
 }): Promise<string> {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
-    return fallbackOneLiner(
-      input.riskLabel,
-      input.salaryLow,
-      input.salaryHigh
-    );
-  }
-
-  const model = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
-
   const userPayload = {
     risk_label: input.riskLabel,
     salary_band_low_lpa: input.salaryLow,
@@ -49,55 +38,32 @@ export async function generateOnboardingRiskOneLiner(input: {
     loan_needed: input.answers.loan_needed,
   };
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 120,
-        system: ONBOARDING_RISK_ONE_LINER_SYSTEM,
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify(userPayload),
-          },
-        ],
-      }),
-      signal: AbortSignal.timeout(4000),
-    });
+  const res = await generateGeminiText({
+    module: "onboarding-liner",
+    systemInstruction: ONBOARDING_RISK_ONE_LINER_SYSTEM,
+    userText: JSON.stringify(userPayload),
+    maxOutputTokens: 200,
+    responseMimeType: "text/plain",
+    temperature: 0.45,
+    signal: AbortSignal.timeout(8000),
+  });
 
-    if (!res.ok) {
-      console.warn("[generateOnboardingRiskOneLiner]", await res.text());
-      return fallbackOneLiner(
-        input.riskLabel,
-        input.salaryLow,
-        input.salaryHigh
-      );
-    }
-
-    const data = (await res.json()) as {
-      content?: Array<{ type: string; text?: string }>;
-    };
-    const text = data.content?.find((c) => c.type === "text")?.text?.trim();
-    if (!text) {
-      return fallbackOneLiner(
-        input.riskLabel,
-        input.salaryLow,
-        input.salaryHigh
-      );
-    }
-    return text.replace(/^["']|["']$/g, "").slice(0, 400);
-  } catch (e) {
-    console.warn("[generateOnboardingRiskOneLiner]", e);
+  if (!res.ok) {
+    console.warn("[generateOnboardingRiskOneLiner]", res.error);
     return fallbackOneLiner(
       input.riskLabel,
       input.salaryLow,
       input.salaryHigh
     );
   }
+
+  const text = res.text.replace(/^["']|["']$/g, "").trim().slice(0, 400);
+  if (!text) {
+    return fallbackOneLiner(
+      input.riskLabel,
+      input.salaryLow,
+      input.salaryHigh
+    );
+  }
+  return text;
 }

@@ -1,5 +1,5 @@
 /**
- * Profile engine (GEMINI_PROFILE_API_KEY) — resume parse, completeness, enrichment writes.
+ * Profile engine — resume parse, completeness, enrichment writes (shared `GEMINI_API_KEY` / Groq).
  * Heavy logic: `@/lib/ai/profile-engine`; this file is the stable orchestration + prompt hook.
  */
 

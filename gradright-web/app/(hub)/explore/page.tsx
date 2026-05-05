@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { ExploreHubClient } from "@/components/student/explore/ExploreHubClient";
+import { ExploreFeatureClient } from "@/app/(hub)/explore/ExploreFeatureClient";
 import { getDashboardAuthContext } from "@/lib/dashboard/get-dashboard-auth";
-import { getStudentProfileByUserId } from "@/lib/db/queries/student_profiles";
 
 export const metadata = {
   title: "Explore",
@@ -16,13 +15,5 @@ export default async function ExplorePage() {
     redirect("/sign-in");
   }
 
-  const profile = await getStudentProfileByUserId(ctx.appUser.id);
-
-  return (
-    <ExploreHubClient
-      countryHint={profile?.target_country ?? null}
-      fieldHint={profile?.broad_field ?? null}
-      scholarshipPriorityHint={profile?.scholarship_priority ?? null}
-    />
-  );
+  return <ExploreFeatureClient />;
 }

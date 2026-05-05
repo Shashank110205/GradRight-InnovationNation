@@ -1,4 +1,5 @@
 import type { NBFCApplicationListItem } from "@/lib/types";
+import { nbfcSnapshotCounts } from "@/lib/nbfc/nbfc-decision-layer";
 
 function pct(n: number, d: number): number {
   if (d <= 0) return 0;
@@ -12,19 +13,16 @@ export function NbfcCommandCenter({
   items: NBFCApplicationListItem[];
   isDemo?: boolean;
 }) {
-  const n = items.length;
-  const highPotential = items.filter(
-    (i) => i.risk_label === "low" && i.placement_prob_6m >= 0.62
-  ).length;
-  const loanReady = items.filter(
-    (i) => i.document_completeness_pct >= 72 && i.status !== "rejected"
-  ).length;
+  const { total: n, highPotential, loanReady } = nbfcSnapshotCounts(items);
   const active = items.filter((i) => i.status !== "rejected").length;
   const funnelSubmitted = items.filter((i) => i.status === "submitted").length;
   const funnelReview = items.filter(
     (i) => i.status === "under_review" || i.status === "manual_review"
   ).length;
   const funnelApproved = items.filter((i) => i.status === "approved").length;
+  const potentialLeads = items.filter((i) => i.status === "submitted").length;
+  const applicationsActive = funnelReview;
+  const approvedDesk = funnelApproved;
 
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm dark:border-slate-800 dark:from-slate-950 dark:to-slate-900/80">
@@ -95,7 +93,7 @@ export function NbfcCommandCenter({
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Conversion funnel (status mix)
+          Pipeline: potential leads → in review → approved
         </p>
         <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
           <div
@@ -127,6 +125,42 @@ export function NbfcCommandCenter({
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             Approved {funnelApproved}
           </span>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Potential leads
+          </p>
+          <p className="mt-1 font-heading text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
+            {potentialLeads}
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Submitted — not yet in credit review
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Applications (in review)
+          </p>
+          <p className="mt-1 font-heading text-2xl font-bold tabular-nums text-indigo-800 dark:text-indigo-200">
+            {applicationsActive}
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Under review or manual queue
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Approved
+          </p>
+          <p className="mt-1 font-heading text-2xl font-bold tabular-nums text-emerald-800 dark:text-emerald-200">
+            {approvedDesk}
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Credit decision complete
+          </p>
         </div>
       </div>
     </section>
