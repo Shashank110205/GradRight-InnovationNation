@@ -1,11 +1,13 @@
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { explainMentorReplyWithGemini } from "@/lib/features/gemini-feature-explain";
 import { requireStudentFeatureAuth } from "@/lib/features/student-auth";
+import { jsonFeatureResponse } from "@/lib/features/json-feature-response";
 import { ensureGroundedProfileContext } from "@/lib/profile/ensure-grounded-context";
 import { getProfileHubFromUserMetadata } from "@/lib/profile/user-profile-hub";
-import { apiError, apiSuccessMeta } from "@/lib/types";
-import { NextResponse } from "next/server";
+import { buildProfileHubApiPayload } from "@/lib/profile/profile-hub-bundle";
+import { apiError } from "@/lib/types";
 
 const bodySchema = z.object({
   message: z.string().min(1).max(8000),
@@ -32,25 +34,22 @@ export async function POST(req: Request): Promise<NextResponse> {
   const meta = ensured.metadata;
   const grounded = getProfileHubFromUserMetadata(meta).grounded_context ?? null;
 
-  const { response, source } = await explainMentorReplyWithGemini({
+  const { text, source } = await explainMentorReplyWithGemini({
     userMessage: body.message,
     meta,
     grounded,
   });
 
-  return NextResponse.json(
-    apiSuccessMeta(
-      {
-        response,
-        source,
-        context_build: {
-          from_cache: ensured.fromCache,
-          refreshed: ensured.refreshed,
-          skip_reason: ensured.skip_reason,
-        },
-      },
-      { feature: "mentor" }
-    ),
-    { headers: { "Cache-Control": "private, no-store" } }
-  );
+  const bundle = buildProfileHubApiPayload(meta);
+
+  return jsonFeatureResponse(auth.ctx, {
+    profile_hub: bundle.profile_hub,
+    response: text,
+    source,
+    context_build: {
+      from_cache: ensured.fromCache,
+      refreshed: ensured.refreshed,
+      skip_reason: ensured.skip_reason,
+    },
+  });
 }

@@ -40,13 +40,12 @@ import type { StudentProfile } from "@/lib/types";
 import type { WeeklyTask } from "@/lib/dashboard/weekly-tasks";
 import { cn } from "@/lib/utils";
 import { parsePlacementIntelFromSnapshot } from "@/lib/dashboard/parse-placement-intel";
-import type { DashboardFeatureHomePanel } from "@/lib/types/feature-api";
-
 import {
   SkeletonInsightTile,
   SkeletonNewsTile,
   SkeletonWeeklyTasksTile,
 } from "./DashboardDeferredTileSkeletons";
+import { PrimaryActionBanner } from "@/components/shared/PrimaryActionBanner";
 import { PrimaryCTACard } from "./PrimaryCTACard";
 
 const NewsFeedTile = dynamic(
@@ -67,7 +66,7 @@ const MODULE_CARDS = [
   { title: "Plan", href: MODULE_ROUTES.plan, blurb: "Predictors & timeline" },
   { title: "Funding", href: MODULE_ROUTES.finance, blurb: "Cost clarity & tools" },
   { title: "Connect", href: "/connect", blurb: "Mentor & community" },
-  { title: "University explorer", href: "/career/navigator", blurb: "Fit & direction" },
+  { title: "Find Universities", href: "/career/navigator", blurb: "Fit & direction" },
   { title: "Apply", href: MODULE_ROUTES.apply, blurb: "When you are ready" },
   { title: "Succeed", href: MODULE_ROUTES.succeed, blurb: "Career milestones" },
 ] as const;
@@ -115,10 +114,16 @@ export type DashboardHomeExperienceProps = {
   wowTrustSnapshot: WowTrustSnapshot;
   /** From `profile_hub.system.profile_completeness` when set (authoritative). */
   profileHubCompleteness: number | null;
-  /** Same bundle as `GET /api/features/home` — hub + risk engine + short Gemini explainer. */
-  featureHome: DashboardFeatureHomePanel | null;
-  /** When set, refetch home feature data (e.g. after profile save in another tab). */
-  onHomeRefresh?: () => void;
+  /** Block from `GET /api/features/home` (grad score, explainer, actions). */
+  featureHome: {
+    short_explanation: string;
+    key_actions: string[];
+    grad_score: number;
+    top_universities: unknown[];
+    explanation_source: string;
+    meta?: unknown;
+    profile_hub?: unknown;
+  } | null;
 };
 
 export function DashboardHomeExperience({
@@ -140,17 +145,9 @@ export function DashboardHomeExperience({
   wowTrustSnapshot,
   profileHubCompleteness,
   featureHome,
-  onHomeRefresh,
 }: DashboardHomeExperienceProps) {
   const router = useRouter();
   const navData = useDashboardNavData();
-
-  useEffect(() => {
-    if (!onHomeRefresh) return;
-    const h = () => onHomeRefresh();
-    window.addEventListener("focus", h);
-    return () => window.removeEventListener("focus", h);
-  }, [onHomeRefresh]);
 
   useEffect(() => {
     router.prefetch("/explore");
@@ -261,6 +258,13 @@ export function DashboardHomeExperience({
           <JourneyBar currentStage={journeyStage} />
         </div>
 
+        {profileCompleteness < 100 ? (
+          <PrimaryActionBanner
+            message={`Your profile is ${Math.round(profileCompleteness)}% complete.`}
+            detail="Complete your profile to improve predictions and recommendations across Explore, Plan, and Funding."
+          />
+        ) : null}
+
         <UserSnapshotCard snapshot={wowTrustSnapshot} />
 
         <section
@@ -283,7 +287,7 @@ export function DashboardHomeExperience({
               )}
             >
               <Target className="h-4 w-4 shrink-0" aria-hidden />
-              Enrich profile intelligence
+              Improve My Profile
             </Link>
             <Link
               href={MODULE_ROUTES.discover}
@@ -348,7 +352,7 @@ export function DashboardHomeExperience({
                 )}
               >
                 <Target className="h-4 w-4" aria-hidden />
-                Upgrade profile intelligence
+                Improve My Profile
               </Link>
             </div>
           </GlassCard>
@@ -412,12 +416,15 @@ export function DashboardHomeExperience({
                   </p>
                 ) : null}
                 <h3 className="mt-3 font-heading text-xl font-semibold leading-snug">
-                  Personalized read from your profile and latest scorer snapshot
+                  Your Insights
                 </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Based on your profile, here&apos;s what matters most right now.
+                </p>
                 {featureHome ? (
                   <div className="mt-3 rounded-xl border border-brand-primary/20 bg-brand-primary/5 px-4 py-3 text-sm leading-relaxed">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-                      Your decision snapshot · GradScore {featureHome.grad_score}
+                      At a glance · GradScore {featureHome.grad_score}
                     </p>
                     <p className="mt-2 text-muted-foreground">{featureHome.short_explanation}</p>
                     {featureHome.key_actions.length ? (
@@ -437,7 +444,7 @@ export function DashboardHomeExperience({
                   ))}
                   {!personalizedLines.length ? (
                     <li className="list-none pl-0 text-muted-foreground">
-                      Enrich profile intelligence and run your GradScore once to unlock destination, cost, and placement-aware lines here.
+                      Improve your profile once to unlock destination, cost, and placement-aware lines tailored to you.
                     </li>
                   ) : null}
                 </ul>

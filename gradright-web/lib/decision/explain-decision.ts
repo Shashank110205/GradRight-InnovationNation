@@ -12,7 +12,7 @@ export async function explainDecisionWithGemini(
   if (!getGeminiApiKey()) {
     return {
       explanation:
-        "AI explanation requires GEMINI_API_KEY. Scores above come from the Python scorer and grounded profile hub only.",
+        "The numbers above already reflect your saved profile and the placement model. A short narrative will appear here once guidance is available.",
       source: "unavailable",
     };
   }

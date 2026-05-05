@@ -16,12 +16,18 @@ import {
 import { resolveMentorMode } from "@/lib/ai/mentor-mode";
 import type { MentorMode } from "@/lib/ai/mentor-mode";
 import { postFeatureApi } from "@/lib/hooks/useFeatureApi";
+import { transformMentorAssistantText } from "@/lib/ui/mentor-response-ui";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "gradright-dashboard-chat";
 const MAX_MESSAGES = 50;
 
-type ChatMsg = { id: string; role: "user" | "assistant"; text: string };
+type ChatMsg = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  mentor?: ReturnType<typeof transformMentorAssistantText>;
+};
 
 const STARTERS_BY_MODE: Record<
   MentorMode,
@@ -59,7 +65,7 @@ function mentorChrome(mode: MentorMode): {
     return {
       title: "GradRight Explore Intelligence",
       description:
-        "Country fit, university logic, admissions myths, and pathway questions — personalized to your profile hub.",
+        "Country fit, university logic, admissions myths, and pathway questions — personalized to your saved profile.",
       fabLabel: "Open Explore Intelligence",
       useDiscoverIcon: true,
     };
@@ -160,12 +166,14 @@ export function ChatbotToggle({ appUserId: _appUserId }: { appUserId: string }) 
       setTransportError(r.error);
       return;
     }
+    const structured = transformMentorAssistantText(r.data.response);
     setMessages((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         role: "assistant",
-        text: r.data.response,
+        text: structured.answer,
+        mentor: structured,
       },
     ]);
   };
@@ -231,7 +239,25 @@ export function ChatbotToggle({ appUserId: _appUserId }: { appUserId: string }) 
                         : "bg-muted text-foreground"
                     )}
                   >
-                    {m.text}
+                    {m.role === "assistant" && m.mentor ? (
+                      <div className="space-y-3">
+                        <p>{m.mentor.answer}</p>
+                        {m.mentor.reasoning ? (
+                          <p className="text-xs leading-relaxed text-muted-foreground">
+                            {m.mentor.reasoning}
+                          </p>
+                        ) : null}
+                        {m.mentor.next_steps.length ? (
+                          <ul className="list-inside list-disc space-y-1 text-xs text-foreground/95">
+                            {m.mentor.next_steps.map((s, i) => (
+                              <li key={i}>{s}</li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    ) : (
+                      m.text
+                    )}
                   </div>
                 </div>
               ))}

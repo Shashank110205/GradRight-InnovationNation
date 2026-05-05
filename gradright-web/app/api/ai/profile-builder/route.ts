@@ -69,6 +69,20 @@ const enrichmentBodySchema = z.object({
   domain: z.string().max(2000),
 });
 
+const guidedGoalsBodySchema = z.object({
+  mode: z.literal("guided_goals"),
+  target_role: z.string().min(1).max(400),
+  domain: z.string().min(1).max(400),
+  five_year_goal: z.string().min(1).max(8000),
+  confidence_mode: z.enum(["confident", "exploring"]),
+  additional_preference: z.string().max(2000).optional(),
+});
+
+const profileBuilderJsonSchema = z.discriminatedUnion("mode", [
+  guidedGoalsBodySchema,
+  enrichmentBodySchema,
+]);
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -131,10 +145,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(apiError("Complete onboarding first"), { status: 400 });
   }
 
-  if (!getGeminiApiKey()) {
-    return NextResponse.json(apiError("AI not configured (GEMINI_API_KEY)"), { status: 503 });
-  }
-
   const rate = await enforceAiChatRateLimit(appUser.id);
   if (!rate.allowed) {
     return NextResponse.json(apiError("Too many requests — try again shortly."), {
@@ -180,6 +190,10 @@ export async function POST(request: Request): Promise<NextResponse> {
         apiError("Could not extract enough text from this PDF"),
         { status: 400 }
       );
+    }
+
+    if (!getGeminiApiKey()) {
+      return NextResponse.json(apiError("Service temporarily unavailable."), { status: 503 });
     }
 
     const userPrompt = `Resume text:\n"""${text.slice(0, 48_000)}"""`;
@@ -253,9 +267,61 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(apiError("Invalid JSON body"), { status: 400 });
   }
 
-  const parsedBody = enrichmentBodySchema.safeParse(json);
+  const parsedBody = profileBuilderJsonSchema.safeParse(json);
   if (!parsedBody.success) {
     return NextResponse.json(apiError("Invalid body"), { status: 400 });
+  }
+
+  if (parsedBody.data.mode === "guided_goals") {
+    const g = parsedBody.data;
+    const clarity = g.confidence_mode === "confident" ? "high" : "medium";
+    let fg = g.five_year_goal.trim();
+    const ap = g.additional_preference?.trim();
+    if (ap) {
+      fg = `${fg}\n\nPreferences: ${ap}`;
+    }
+
+    const base = mergeProfileIntelligence(prevPi, {});
+    const merged = mergeProfileIntelligence(prevPi, {
+      goals: {
+        ...base.goals,
+        five_year_goal: fg,
+        target_role: g.target_role.trim(),
+        domain: g.domain.trim(),
+        clarity,
+      },
+    });
+    const normalized = normalizeProfileIntelligence(merged);
+    const validated = validateProfileIntelligenceForSave(normalized);
+
+    const baseMeta = buildUserMetadataWithProfileIntelligence(prevMeta, validated);
+    const patched = applyProfileHubPatch(baseMeta, {
+      goals_snapshot: validated.goals,
+      resume_snapshot: validated.resume,
+    });
+    const nextMeta = mergeProfileCompletenessIntoMetadata(patched);
+
+    const { error: upErr } = await supabase.auth.updateUser({ data: nextMeta });
+    if (upErr) {
+      console.error("[profile-builder] updateUser", upErr);
+      return NextResponse.json(apiError("Failed to save profile metadata"), {
+        status: 500,
+      });
+    }
+
+    scheduleEnsureGroundedProfileContext(supabase, nextMeta);
+
+    return NextResponse.json(
+      apiSuccess({
+        saved: true,
+        source: "guided_goals",
+        profile_intelligence: validated,
+      })
+    );
+  }
+
+  if (!getGeminiApiKey()) {
+    return NextResponse.json(apiError("Service temporarily unavailable."), { status: 503 });
   }
 
   const { five_year_goal, target_role, domain } = parsedBody.data;

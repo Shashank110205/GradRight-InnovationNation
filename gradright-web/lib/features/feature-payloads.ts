@@ -1,6 +1,28 @@
 import { computeScoringFromUserMetadata } from "@/lib/decision/compute-scoring";
 import { explainDecisionWithGemini } from "@/lib/decision/explain-decision";
 import { aggregateGapsAndActions } from "@/lib/decision/aggregate-gaps";
+import { warnIfStudentProfileSchemaDrift } from "@/lib/dashboard/dashboard-profile-fallback";
+import { getCachedDashboardNews } from "@/lib/dashboard/dashboard-news";
+import {
+  getCachedDashboardProfile,
+  getCachedStudentIntelligence,
+  getCachedUniversitiesForProfile,
+} from "@/lib/dashboard/dashboard-server-cache";
+import { buildDashboardPersonalizedLines } from "@/lib/dashboard/personalized-insights";
+import { buildWeeklyTasks } from "@/lib/dashboard/weekly-tasks";
+import { exploreSignalsReady } from "@/lib/explore/explore-wow";
+import {
+  formatDashboardDateHeader,
+  formatDashboardEventTime,
+} from "@/lib/format/dashboard-dates";
+import type { DashboardNewsFeedItem, RankedNewsItem } from "@/lib/data";
+import { getUserBadgesDistinct } from "@/lib/db/queries/gamification_badges";
+import { getLatestRiskScoreByUserId } from "@/lib/db/queries/risk_scores";
+import {
+  getCompletedWeeklyTaskIds,
+  getRecentUserEventsByUserId,
+} from "@/lib/db/queries/user_events_list";
+import { MAX_GROUNDED_SEARCHES_PER_USER } from "@/lib/profile/grounded-context";
 import { buildProfileHubApiPayload } from "@/lib/profile/profile-hub-bundle";
 import { getProfileHubFromUserMetadata } from "@/lib/profile/user-profile-hub";
 import { ensureGroundedProfileContext } from "@/lib/profile/ensure-grounded-context";
@@ -12,16 +34,17 @@ import {
   parseProfileResumeSkills,
 } from "@/lib/features/grounded-derive";
 import {
-  enrichCareerNarrativeFromProfile,
-  enrichDiscoverInsightsWhenEmpty,
-  enrichFinancialLiteracyNarrative,
-  enrichScholarshipStrategyNarrative,
+  buildMentorProfileSummary,
+  enrichCareerFeatureWithGemini,
+  enrichFinancialLiteracyWithGemini,
+  enrichScholarshipsWithGemini,
+  explainHomeShortWithGemini,
   explainGreEstimateWithGemini,
 } from "@/lib/features/gemini-feature-explain";
+import type { FeatureModuleData } from "@/lib/features/module-contract";
 import type { StudentFeatureContext } from "@/lib/features/student-auth";
-import { exploreSignalsReady } from "@/lib/explore/explore-wow";
-import { shimStudentProfileFromUserMetadata } from "@/lib/profile/hub-profile-shim";
-import { buildStudentIntelligence } from "@/lib/profile/student-intelligence";
+import { buildWowTrustSnapshot } from "@/lib/trust-layer/wow-trust-snapshot";
+import type { JourneyStage } from "@/lib/types";
 
 const FIN_LIT_CORE = [
   {
@@ -57,6 +80,153 @@ async function syncHubMeta(ctx: StudentFeatureContext): Promise<Record<string, u
   return ensured.metadata;
 }
 
+function toNewsFeedItems(items: RankedNewsItem[]): DashboardNewsFeedItem[] {
+  return items.slice(0, 5).map((n) => ({
+    id: n.id,
+    source: n.source,
+    relevance_tag: n.relevance_tag,
+    headline: n.headline,
+    summary: n.summary,
+    url: n.url,
+  }));
+}
+
+/**
+ * Full dashboard bundle for `GET /api/features/home` — server-side only (API + RSC may not import in UI).
+ */
+export async function buildHomeFeatureData(ctx: StudentFeatureContext) {
+  const meta = await syncHubMeta(ctx);
+  const bundle = buildProfileHubApiPayload(meta);
+  const scoring = await computeScoringFromUserMetadata(meta);
+  const { actions, gaps } = aggregateGapsAndActions(scoring);
+  const { text: short_explanation, source: explanation_source } =
+    await explainHomeShortWithGemini(scoring);
+
+  const userId = ctx.appUser.id;
+
+  const [, profile] = await Promise.all([
+    warnIfStudentProfileSchemaDrift(),
+    getCachedDashboardProfile(userId),
+  ]);
+
+  const intelligence = getCachedStudentIntelligence(profile);
+
+  const [risk, events, completedTaskIds, badges, newsItems] = await Promise.all([
+    getLatestRiskScoreByUserId(userId),
+    getRecentUserEventsByUserId(userId, 8),
+    getCompletedWeeklyTaskIds(userId),
+    getUserBadgesDistinct(userId),
+    getCachedDashboardNews(profile),
+  ]);
+
+  const topUniversity = getCachedUniversitiesForProfile(profile, 1)[0] ?? null;
+  const topUniversitiesForWow = exploreSignalsReady(profile)
+    ? getCachedUniversitiesForProfile(profile, 2)
+    : [];
+  const wowTrustSnapshot = buildWowTrustSnapshot({
+    profile,
+    intelligence,
+    risk,
+    topUniversities: topUniversitiesForWow,
+  });
+
+  const tasks = buildWeeklyTasks(profile, ctx.appUser.journey_stage);
+
+  const displayName =
+    ctx.appUser.full_name?.trim() || ctx.authUser.email?.split("@")[0] || "Student";
+
+  const todayLabel = formatDashboardDateHeader(new Date());
+  const profileHubCompleteness = bundle.profile_hub.system.profile_completeness;
+
+  const personalizedLines = buildDashboardPersonalizedLines(profile, risk, {
+    intelligence,
+    topUniversity,
+    profileHubCompleteness,
+  });
+  const eventsSlim = events.slice(0, 5);
+  const eventsWithLabels = eventsSlim.map((e) => ({
+    ...e,
+    createdAtLabel: e.created_at ? formatDashboardEventTime(e.created_at) : null,
+  }));
+
+  const newsFeedItems = toNewsFeedItems(newsItems ?? []);
+
+  const reasonLines =
+    gaps.slice(0, 6).length > 0
+      ? gaps.slice(0, 6)
+      : scoring.universities.slice(0, 4).map(
+          (u) =>
+            `${u.name} (${u.country}, ${u.tier}) — compare stated requirements with your CV signals.`
+        );
+  const presentation: FeatureModuleData = {
+    summary:
+      short_explanation.trim() ||
+      `GradScore ${Math.round(scoring.grad_score)} — your dashboard updates as profile_hub fills in.`,
+    insights: personalizedLines.slice(0, 12),
+    reasons:
+      reasonLines.length > 0
+        ? reasonLines
+        : [
+            "Add target role + domain under Profile intelligence so labor-market orientation can anchor to you.",
+          ],
+    actions: actions.slice(0, 10),
+    metrics: [
+      { label: "GradScore", value: String(Math.round(scoring.grad_score)) },
+      {
+        label: "Profile completeness",
+        value: `${Math.round(profileHubCompleteness ?? 0)}%`,
+      },
+      {
+        label: "Grounded orientation",
+        value: bundle.profile_hub.grounded_context?.last_updated
+          ? new Date(bundle.profile_hub.grounded_context.last_updated).toLocaleDateString()
+          : "Not refreshed yet",
+      },
+      {
+        label: "Research passes left",
+        value: String(
+          Math.max(
+            0,
+            MAX_GROUNDED_SEARCHES_PER_USER -
+              (typeof bundle.profile_hub.system.grounded_search_count === "number"
+                ? bundle.profile_hub.system.grounded_search_count
+                : 0)
+          )
+        ),
+      },
+    ],
+  };
+
+  return {
+    ...presentation,
+    profile_hub: bundle.profile_hub,
+    grad_score: scoring.grad_score,
+    profile_completeness: bundle.profile_hub.system.profile_completeness,
+    top_universities: scoring.universities.slice(0, 3),
+    key_actions: actions.slice(0, 5),
+    short_explanation,
+    explanation_source,
+    scoring_meta: scoring.meta,
+    displayName,
+    navCacheUserId: userId,
+    studentIntelligence: intelligence,
+    profile,
+    risk,
+    journeyStage: ctx.appUser.journey_stage as JourneyStage,
+    xpPoints: ctx.appUser.xp_points,
+    streakDays: ctx.appUser.streak_days,
+    badges,
+    tasks,
+    completedTaskIds,
+    events: eventsWithLabels,
+    newsItems: newsFeedItems,
+    todayLabel,
+    personalizedLines,
+    wowTrustSnapshot,
+    profileHubCompleteness,
+  };
+}
+
 export async function buildDiscoverFeatureData(ctx: StudentFeatureContext) {
   const meta = await syncHubMeta(ctx);
   const bundle = buildProfileHubApiPayload(meta);
@@ -72,35 +242,47 @@ export async function buildDiscoverFeatureData(ctx: StudentFeatureContext) {
       : null,
   ].filter((x): x is string => Boolean(x));
 
-  let insights = [...(gc?.student_insights ?? [])];
-  if (!insights.length) {
-    const filled = await enrichDiscoverInsightsWhenEmpty(meta);
-    if (filled?.length) insights = filled;
+  const insights = gc?.student_insights ?? [];
+  if (!trends.length && insights.length) {
+    trends.push(
+      ...insights.slice(0, 3).map((s) => `${s.title}: ${s.summary.slice(0, 140)}…`)
+    );
+  }
+  if (!trends.length) {
+    trends.push(
+      `Refresh orientation from profile hub once targets + goals are set — ${buildMentorProfileSummary(meta).slice(0, 200)}`
+    );
   }
 
-  const shim = shimStudentProfileFromUserMetadata(meta, ctx.appUser.id);
-  const student_intelligence = buildStudentIntelligence(shim);
-  const signals_ready = exploreSignalsReady(shim);
-  const profile_completeness = bundle.profile_hub.system.profile_completeness ?? null;
-
-  let latest_trends = trends;
-  if (!latest_trends.length) {
-    const t = await enrichCareerNarrativeFromProfile(meta);
-    if (t) latest_trends = [t];
-  }
-  if (!latest_trends.length) {
-    latest_trends = [
-      "Set target countries, field, and role in your profile hub, then refresh orientation to load labor-market and cost signals for your exact plan.",
-    ];
-  }
+  const insightBullets = insights
+    .slice(0, 10)
+    .map((s) => `${s.title}: ${s.summary.slice(0, 140)}`);
+  const discoverPresentation: FeatureModuleData = {
+    summary:
+      trends[0]?.slice(0, 600) ??
+      buildMentorProfileSummary(meta).slice(0, 600),
+    insights: insightBullets.length ? insightBullets : trends.slice(0, 10),
+    reasons: trends.slice(0, 8),
+    actions: [
+      "Align goals and destinations under Profile coach so labor-market signals stay specific.",
+      "Re-open Discover after a hub refresh to pull the newest orientation.",
+    ],
+    metrics: [
+      {
+        label: "Orientation updated",
+        value: gc?.last_updated
+          ? new Date(gc.last_updated).toLocaleDateString()
+          : "Not yet",
+      },
+      { label: "Student notes", value: String(insights.length) },
+    ],
+  };
 
   return {
+    ...discoverPresentation,
     profile_hub: bundle.profile_hub,
-    student_intelligence,
-    profile_completeness,
-    signals_ready,
     insights,
-    latest_trends,
+    latest_trends: trends,
     student_experiences: insights,
   };
 }
@@ -109,40 +291,48 @@ export async function buildCareerFeatureData(ctx: StudentFeatureContext) {
   const meta = await syncHubMeta(ctx);
   const bundle = buildProfileHubApiPayload(meta);
   const jm = bundle.profile_hub.grounded_context?.job_market ?? null;
-  const shim = shimStudentProfileFromUserMetadata(meta, ctx.appUser.id);
-  const student_intelligence = buildStudentIntelligence(shim);
-
-  const hasMarket = Boolean(
-    (jm?.roles && jm.roles.length > 0) || (jm?.salary_range && jm.salary_range.trim())
-  );
-  const aiNarrative = !hasMarket ? await enrichCareerNarrativeFromProfile(meta) : null;
-
-  const demand_trends = jm?.roles?.length
+  let roles = jm?.roles ?? [];
+  let salary_range = jm?.salary_range ?? "";
+  let skills = jm?.skills ?? [];
+  let companies = jm?.companies ?? [];
+  let demand_trends = jm?.roles?.length
     ? `Employers are hiring for: ${jm.roles.slice(0, 10).join("; ")}.`
-    : aiNarrative ??
-      "Add your target role in profile goals and run orientation refresh to see employer demand for your field and destinations.";
+    : "";
+  let growth_trajectory = jm?.salary_range?.trim()
+    ? `Salary bands reported in orientation: ${jm.salary_range}`
+    : null;
 
-  const growth_trajectory = jm?.salary_range?.trim()
-    ? `Salary / compensation context from orientation: ${jm.salary_range}`
-    : aiNarrative ??
-      "Salary bands and growth paths load from your orientation block after countries + field + role are set.";
+  if (
+    !roles.length ||
+    !salary_range.trim() ||
+    demand_trends.includes("Complete grounded")
+  ) {
+    const fill = await enrichCareerFeatureWithGemini({
+      meta,
+      summary: buildMentorProfileSummary(meta),
+    });
+    if (fill) {
+      roles = fill.roles.length ? fill.roles : roles;
+      salary_range = fill.salary_range || salary_range;
+      demand_trends = fill.demand_trends || demand_trends;
+      growth_trajectory = fill.growth_trajectory ?? growth_trajectory;
+    }
+  }
+
+  if (!demand_trends.trim()) {
+    demand_trends =
+      "Ground your next step: finish onboarding targets + goals so we can refresh labor-market orientation.";
+  }
 
   return {
     profile_hub: bundle.profile_hub,
-    student_intelligence,
-    goals: bundle.profile_hub.goals_snapshot,
-    target_countries: shim?.target_country,
-    career_interest: student_intelligence.career_direction,
-    roles: jm?.roles ?? [],
-    /** Alias for product copy */
-    demand: jm?.roles ?? [],
-    salary: jm?.salary_range ?? "",
-    salary_range: jm?.salary_range ?? "",
-    skills: jm?.skills ?? [],
-    companies: jm?.companies ?? [],
+    roles,
+    salary_range,
+    skills,
+    companies,
     demand_trends,
-    growth: growth_trajectory,
     growth_trajectory,
+    goals_line: buildMentorProfileSummary(meta),
   };
 }
 
@@ -224,19 +414,20 @@ export async function buildScholarshipsFeatureData(ctx: StudentFeatureContext) {
   const bundle = buildProfileHubApiPayload(meta);
   const hints = scholarshipHintsFromContext(bundle.profile_hub.grounded_context);
   const deadlines = aggregateTimelineHints(bundle.profile_hub.grounded_context);
-  const enriched = await enrichScholarshipStrategyNarrative({
-    meta,
-    hints,
-    timelines: deadlines,
+  const structured = await enrichScholarshipsWithGemini({
+    summary: buildMentorProfileSummary(meta),
+    program_hints: [...hints, ...deadlines].join("\n"),
   });
 
   return {
     profile_hub: bundle.profile_hub,
-    scholarships: enriched?.items ?? [],
-    strategy: enriched?.strategy ?? "",
-    eligibility: enriched?.items?.map((i) => i.eligibility).filter(Boolean) ?? hints,
-    deadlines,
+    scholarships: structured ?? [],
     eligibility_hints: hints,
+    deadlines,
+    strategy:
+      structured && structured.length
+        ? "Prioritize awards where your stated field + destinations overlap; tailor essays to each rubric."
+        : "Complete orientation + goals so scholarship tracks can be titled to your profile.",
   };
 }
 
@@ -258,48 +449,41 @@ export async function buildFinancialLiteracyFeatureData(ctx: StudentFeatureConte
   const bundle = buildProfileHubApiPayload(meta);
   const jm = bundle.profile_hub.grounded_context?.job_market;
   const scoring = await computeScoringFromUserMetadata(meta);
-  const feesDigest = (bundle.profile_hub.grounded_context?.universities ?? [])
-    .map((u) => `${u.name} (${u.country}): ${u.fees}`)
+  const fees_preview =
+    bundle.profile_hub.grounded_context?.universities
+      ?.slice(0, 10)
+      .map((u) => `${u.name} (${u.country}): ${u.fees}`)
+      .join("\n") ?? "";
+  const roi_hint = [
+    scoring.roi?.ratio != null ? `ROI ratio: ${scoring.roi.ratio}` : "",
+    scoring.roi?.salary_mid_lpa != null ? `Salary mid LPA heuristic: ${scoring.roi.salary_mid_lpa}` : "",
+    jm?.salary_range ? `Job market salary text: ${jm.salary_range}` : "",
+  ]
+    .filter(Boolean)
     .join("\n");
-  const roiHint = JSON.stringify(scoring.roi ?? {});
-  const personalized = await enrichFinancialLiteracyNarrative({
-    meta,
-    feesDigest,
-    roiHint,
+
+  const ai = await enrichFinancialLiteracyWithGemini({
+    summary: buildMentorProfileSummary(meta),
+    fees_preview,
+    roi_hint,
   });
-
-  const cost_breakdown = (bundle.profile_hub.grounded_context?.universities ?? []).slice(0, 8).map(
-    (u) => ({
-      university: u.name,
-      country: u.country,
-      fees: u.fees,
-      tier: u.tier,
-    })
-  );
-
-  const emi_explanation =
-    personalized ??
-    "EMI starts after moratorium for many education loans; confirm whether simple or reducing balance interest applies and whether you pay during study.";
 
   return {
     profile_hub: bundle.profile_hub,
-    cost_breakdown,
     concepts: [...FIN_LIT_CORE],
     loan_basics:
+      ai?.emi_explainer ||
       "Compare APR, moratorium, co-applicant rules, and collateral requirements before signing.",
-    emi_explanation,
-    roi_insights: [
-      scoring.roi?.ratio != null ? `Salary vs fee index ratio: ${scoring.roi.ratio}` : null,
-      jm?.salary_range ? `Salary context from orientation: ${jm.salary_range}` : null,
-    ].filter((x): x is string => Boolean(x)),
     planning_tips: [
+      ai?.personalized_paragraph,
       jm?.salary_range ? `Salary context from orientation: ${jm.salary_range}` : null,
       scoring.roi?.ratio != null
         ? `ROI lens ratio (salary index vs fee index): ${scoring.roi.ratio}`
         : null,
+      ai?.roi_takeaway,
       "Stress-test FX + 10% cost inflation for the first year abroad.",
     ].filter((x): x is string => Boolean(x)),
-    personalized_finance_plan: personalized ?? "",
+    cost_breakdown_preview: fees_preview || null,
   };
 }
 
@@ -468,24 +652,14 @@ export async function buildScholarshipStrategyFeatureData(ctx: StudentFeatureCon
   const bundle = buildProfileHubApiPayload(meta);
   const scoring = await computeScoringFromUserMetadata(meta);
   const hints = scholarshipHintsFromContext(bundle.profile_hub.grounded_context);
-  const deadlines = aggregateTimelineHints(bundle.profile_hub.grounded_context);
-  const enriched = await enrichScholarshipStrategyNarrative({
-    meta,
-    hints,
-    timelines: deadlines,
-  });
 
   return {
     profile_hub: bundle.profile_hub,
-    recommended_scholarships:
-      enriched?.items?.map((i) => `${i.title}: ${i.eligibility}`) ?? hints,
+    recommended_scholarships: hints,
     strategy_tips: [
-      ...(enriched?.strategy ? [enriched.strategy] : []),
       ...(scoring.readiness.improvement_areas ?? []).slice(0, 5),
       "Front-load merit narratives tied to projects and measurable outcomes.",
     ],
-    deadlines,
-    scholarship_cards: enriched?.items ?? [],
   };
 }
 
@@ -505,24 +679,44 @@ export async function buildFundingReadinessFeatureData(ctx: StudentFeatureContex
   };
 }
 
-export function buildCommunityFeatureData() {
+export async function buildCommunityFeatureData(ctx: StudentFeatureContext) {
+  const meta = await syncHubMeta(ctx);
+  const bundle = buildProfileHubApiPayload(meta);
+  const welcome = buildMentorProfileSummary(meta).split("\n")[0] ?? "Your journey";
+
   return {
+    profile_hub: bundle.profile_hub,
     highlights: [
-      "Students share timelines by destination — calm, specific, outcome-linked.",
-      "Weekly wins and scholarship deadlines surface once your hub is filled.",
+      `Built around ${welcome.replace(/^Target countries:\s*/i, "destinations: ")}`,
+      "Share wins and deadlines with students targeting similar destinations — calm, specific, outcome-linked.",
     ],
-    note: "Live community feeds ship next; this panel is a structured preview only.",
+    note: "Live feeds unlock next; today’s copy reflects your saved hub signals only.",
   };
 }
 
-export function buildPeersFeatureData() {
+export async function buildPeersFeatureData(ctx: StudentFeatureContext) {
+  const meta = await syncHubMeta(ctx);
+  const bundle = buildProfileHubApiPayload(meta);
+  const summary = buildMentorProfileSummary(meta);
+  const fieldMatch =
+    summary.match(/Field:\s*([^.]+)/i)?.[1]?.trim() || "your field";
+  const countryMatch =
+    summary.match(/Target countries:\s*([^.]+)/i)?.[1]?.trim() || "your destinations";
+
   return {
+    profile_hub: bundle.profile_hub,
     peer_groups_preview: [
-      { lens: "City → destination", example: "Mumbai → Ireland · Fall 2026" },
-      { lens: "Field + goal", example: "CS → US tech hiring track" },
-      { lens: "Stage", example: "Test prep + SOP drafting cohort" },
+      {
+        lens: "Destination match",
+        example: `Students also aiming at ${countryMatch.split(",").slice(0, 2).join(", ")}`,
+      },
+      { lens: "Field + goal", example: `${fieldMatch} graduate hiring tracks` },
+      {
+        lens: "Stage",
+        example: "Test prep + SOP drafting — aligned to your intake timing",
+      },
     ],
-    note: "Matching uses your profile hub signals once peer groups go live.",
+    note: "Peer matching will use these hub signals first when groups go live.",
   };
 }
 
@@ -562,8 +756,11 @@ export async function buildNotificationsFeatureData(ctx: StudentFeatureContext) 
   return { profile_hub: bundle.profile_hub, notifications: items };
 }
 
-export async function buildProfileDeepeningResponse(_ctx: StudentFeatureContext) {
+export async function buildProfileDeepeningResponse(ctx: StudentFeatureContext) {
+  const meta = await syncHubMeta(ctx);
+  const bundle = buildProfileHubApiPayload(meta);
   return {
+    profile_hub: bundle.profile_hub,
     score_upgrade_href: "/dashboard/score-upgrade",
     message:
       "Deepen your résumé and goals in the score-upgrade flow — data saves into profile_hub via the profile intelligence chat.",
@@ -586,3 +783,4 @@ export async function buildGreFeatureData(ctx: StudentFeatureContext) {
     source: gre.source,
   };
 }
+

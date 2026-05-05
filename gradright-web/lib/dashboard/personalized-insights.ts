@@ -104,7 +104,7 @@ export function buildDashboardPersonalizedLines(
 
   if (risk?.placement_prob_6m != null) {
     lines.push(
-      `Your latest stored placement outlook (6-month horizon) is about ${Math.round(risk.placement_prob_6m * 100)}% — grounded in the same scorer inputs used for Funding and NBFC views.`
+      `Your latest stored placement outlook (6-month horizon) is about ${Math.round(risk.placement_prob_6m * 100)}% — aligned with the same signals we use for funding and placement guidance.`
     );
   }
 

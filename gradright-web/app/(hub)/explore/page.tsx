@@ -1,7 +1,4 @@
-import { redirect } from "next/navigation";
-
-import { ExploreFeatureClient } from "@/app/(hub)/explore/ExploreFeatureClient";
-import { getDashboardAuthContext } from "@/lib/dashboard/get-dashboard-auth";
+import { ExploreFeaturePageClient } from "@/components/student/explore/ExploreFeaturePageClient";
 
 export const metadata = {
   title: "Explore",
@@ -9,11 +6,6 @@ export const metadata = {
     "Discover feed, guides, and awareness-first education for your study abroad journey.",
 };
 
-export default async function ExplorePage() {
-  const ctx = await getDashboardAuthContext();
-  if (!ctx) {
-    redirect("/sign-in");
-  }
-
-  return <ExploreFeatureClient />;
+export default function ExplorePage() {
+  return <ExploreFeaturePageClient />;
 }
