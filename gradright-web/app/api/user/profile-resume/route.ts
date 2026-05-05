@@ -1,4 +1,8 @@
-import { createServerClient, createServiceRoleSupabaseClient } from "@/lib/db/supabase";
+import {
+  createServerClient,
+  createServiceRoleSupabaseClient,
+  envStr,
+} from "@/lib/db/supabase";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { apiError, apiSuccess } from "@/lib/types";
 import { NextResponse } from "next/server";
@@ -49,20 +53,34 @@ export async function POST(request: Request): Promise<NextResponse> {
   const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 120);
   const path = `${PREFIX}/${appUser.id}/${crypto.randomUUID()}-${safeName}`;
 
-  try {
-    const admin = createServiceRoleSupabaseClient();
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const { error } = await admin.storage.from(BUCKET).upload(path, buffer, {
-      contentType: file.type || "application/octet-stream",
-      upsert: false,
-    });
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const contentType = file.type || "application/octet-stream";
 
-    if (error) {
-      console.error("[profile-resume upload]", error);
+  try {
+    let uploadError: { message: string } | null = null;
+
+    if (envStr("SUPABASE_SERVICE_ROLE_KEY")) {
+      const admin = createServiceRoleSupabaseClient();
+      const { error } = await admin.storage.from(BUCKET).upload(path, buffer, {
+        contentType,
+        upsert: false,
+      });
+      uploadError = error;
+    } else {
+      const { error } = await supabase.storage.from(BUCKET).upload(path, buffer, {
+        contentType,
+        upsert: false,
+      });
+      uploadError = error;
+    }
+
+    if (uploadError) {
+      console.error("[profile-resume upload]", uploadError.message);
+      const hint = envStr("SUPABASE_SERVICE_ROLE_KEY")
+        ? `Supabase Storage rejected the upload. In the Supabase dashboard → Storage, create a bucket named "${BUCKET}" (same as loan documents) if it is missing, or fix policies.`
+        : `No SUPABASE_SERVICE_ROLE_KEY on the server — upload used your session instead and Storage policies blocked it. Add SUPABASE_SERVICE_ROLE_KEY to gradright-web/.env.local and restart dev.`;
       return NextResponse.json(
-        apiError(
-          "Could not upload resume. Ensure storage is configured (same bucket as loan documents)."
-        ),
+        apiError(`${hint} Details: ${uploadError.message}`),
         { status: 503 }
       );
     }
@@ -76,6 +94,12 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   } catch (e) {
     console.error("[profile-resume upload]", e);
-    return NextResponse.json(apiError("Upload failed"), { status: 500 });
+    const msg = e instanceof Error ? e.message : "Upload failed";
+    return NextResponse.json(
+      apiError(
+        `Upload failed: ${msg}. If this mentions missing env vars, set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL.`
+      ),
+      { status: 500 }
+    );
   }
 }

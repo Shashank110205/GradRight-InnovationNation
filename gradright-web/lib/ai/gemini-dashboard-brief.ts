@@ -3,7 +3,10 @@ import type { StudentProfile } from "@/lib/types";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { parseTargetCountries } from "@/lib/types";
 
-import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
+import { getGeminiApiKey } from "@/lib/ai/env";
+import { getGeminiModelId } from "@/lib/ai/providers/gemini";
+import { logGeminiError, logGeminiRequest } from "@/lib/ai/gemini-forensic-log";
+import { safeGeminiGenerate } from "@/lib/ai/gemini-client";
 
 export type DashboardBrief = {
   headline: string;
@@ -77,13 +80,10 @@ export async function generateDashboardBrief(input: {
 }): Promise<{ brief: DashboardBrief; source: "gemini" | "template" }> {
   const fallback = templateBrief(input);
 
-  const apiKey = getGeminiApiKeyForEngine("dashboard");
+  const apiKey = getGeminiApiKey();
   if (!apiKey) {
     return { brief: fallback, source: "template" };
   }
-
-  const modelId =
-    process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
 
   const userBlob = {
     first_name: input.firstName,
@@ -117,21 +117,31 @@ export async function generateDashboardBrief(input: {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: modelId,
+      model: getGeminiModelId(),
       systemInstruction: SYSTEM,
     });
 
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: JSON.stringify(userBlob) }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.65,
-        maxOutputTokens: 400,
-      },
+    logGeminiRequest(
+      "generateDashboardBrief",
+      apiKey,
+      SYSTEM.length + JSON.stringify(userBlob).length
+    );
+
+    const result = await safeGeminiGenerate({
+      module: "generateDashboardBrief",
+      run: () =>
+        model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: JSON.stringify(userBlob) }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.65,
+            maxOutputTokens: 400,
+          },
+        }),
     });
 
     const text = result.response.text()?.trim();
@@ -146,6 +156,7 @@ export async function generateDashboardBrief(input: {
 
     return { brief: parsed, source: "gemini" };
   } catch (e) {
+    logGeminiError("generateDashboardBrief", e);
     console.warn("[generateDashboardBrief]", e);
     return { brief: fallback, source: "template" };
   }

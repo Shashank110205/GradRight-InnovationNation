@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import {
   Activity,
   Award,
@@ -15,7 +16,13 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
+
+import { UserSnapshotCard } from "@/components/shared/UserSnapshotCard";
+import { useDashboardNavData } from "@/components/student/dashboard/DashboardNavDataContext";
+import type { StudentIntelligence } from "@/lib/profile/student-intelligence";
+import type { WowTrustSnapshot } from "@/lib/trust-layer/wow-trust-snapshot";
 
 import { GlassCard } from "@/components/shell/GlassCard";
 import { CountUp } from "@/components/shell/CountUp";
@@ -27,17 +34,33 @@ import { buttonVariants } from "@/components/ui/button";
 import { MODULE_ROUTES } from "@/lib/dashboard/module-registry";
 import type { JourneyStage } from "@/lib/types";
 import type { LatestRiskScoreSummary } from "@/lib/db/queries/risk_scores";
-import type { MockNewsItem } from "@/lib/ai/risk-engine/data/mock-news";
+import type { DashboardNewsFeedItem } from "@/lib/data";
 import type { UserEventRow } from "@/lib/db/queries/user_events_list";
 import type { StudentProfile } from "@/lib/types";
 import type { WeeklyTask } from "@/lib/dashboard/weekly-tasks";
 import { cn } from "@/lib/utils";
 import { parsePlacementIntelFromSnapshot } from "@/lib/dashboard/parse-placement-intel";
+import type { DashboardFeatureHomePanel } from "@/lib/types/feature-api";
 
-import { NewsFeedTile } from "./NewsFeedTile";
+import {
+  SkeletonInsightTile,
+  SkeletonNewsTile,
+  SkeletonWeeklyTasksTile,
+} from "./DashboardDeferredTileSkeletons";
 import { PrimaryCTACard } from "./PrimaryCTACard";
-import { QuickInsightTile } from "./QuickInsightTile";
-import { WeeklyTasksTile } from "./WeeklyTasksTile";
+
+const NewsFeedTile = dynamic(
+  () => import("./NewsFeedTile").then((m) => ({ default: m.NewsFeedTile })),
+  { loading: () => <SkeletonNewsTile /> }
+);
+const QuickInsightTile = dynamic(
+  () => import("./QuickInsightTile").then((m) => ({ default: m.QuickInsightTile })),
+  { loading: () => <SkeletonInsightTile /> }
+);
+const WeeklyTasksTile = dynamic(
+  () => import("./WeeklyTasksTile").then((m) => ({ default: m.WeeklyTasksTile })),
+  { loading: () => <SkeletonWeeklyTasksTile /> }
+);
 
 const MODULE_CARDS = [
   { title: "Explore", href: MODULE_ROUTES.discover, blurb: "Discover feed & guides" },
@@ -73,6 +96,9 @@ export type DashboardEventForClient = UserEventRow & {
 
 export type DashboardHomeExperienceProps = {
   displayName: string;
+  /** Internal user id for client-side nav cache (session + context). */
+  navCacheUserId: string;
+  studentIntelligence: StudentIntelligence;
   profile: StudentProfile | null;
   risk: LatestRiskScoreSummary | null;
   journeyStage: JourneyStage;
@@ -82,12 +108,23 @@ export type DashboardHomeExperienceProps = {
   tasks: WeeklyTask[];
   completedTaskIds: string[];
   events: DashboardEventForClient[];
-  newsItems: MockNewsItem[];
+  newsItems: DashboardNewsFeedItem[];
   todayLabel: string;
+  /** Profile- and scorer-grounded lines (no static percentile fiction). */
+  personalizedLines: string[];
+  wowTrustSnapshot: WowTrustSnapshot;
+  /** From `profile_hub.system.profile_completeness` when set (authoritative). */
+  profileHubCompleteness: number | null;
+  /** Same bundle as `GET /api/features/home` — hub + risk engine + short Gemini explainer. */
+  featureHome: DashboardFeatureHomePanel | null;
+  /** When set, refetch home feature data (e.g. after profile save in another tab). */
+  onHomeRefresh?: () => void;
 };
 
 export function DashboardHomeExperience({
   displayName,
+  navCacheUserId,
+  studentIntelligence,
   profile,
   risk,
   journeyStage,
@@ -99,10 +136,35 @@ export function DashboardHomeExperience({
   events,
   newsItems,
   todayLabel,
+  personalizedLines,
+  wowTrustSnapshot,
+  profileHubCompleteness,
+  featureHome,
+  onHomeRefresh,
 }: DashboardHomeExperienceProps) {
+  const router = useRouter();
+  const navData = useDashboardNavData();
+
+  useEffect(() => {
+    if (!onHomeRefresh) return;
+    const h = () => onHomeRefresh();
+    window.addEventListener("focus", h);
+    return () => window.removeEventListener("focus", h);
+  }, [onHomeRefresh]);
+
+  useEffect(() => {
+    router.prefetch("/explore");
+    router.prefetch("/plan");
+    router.prefetch("/funding");
+    router.prefetch("/connect");
+  }, [router]);
+
+  useEffect(() => {
+    navData?.publish(navCacheUserId, profile, studentIntelligence);
+  }, [navData, navCacheUserId, profile, studentIntelligence]);
+
   const greeting = displayName ? `Hey ${displayName.split(" ")[0]},` : "Hey trailblazer,";
   const score = heroScore(risk);
-  const peer = Math.max(2, 100 - score);
   const country = profile?.target_country ?? null;
   const field = profile?.broad_field ?? "Your field";
   const placementPct =
@@ -119,8 +181,10 @@ export function DashboardHomeExperience({
     if (profile.scholarship_priority?.trim()) {
       bits.push(`priority: ${profile.scholarship_priority.replace(/_/g, " ")}`);
     }
-    if (profile.profile_completeness_score && profile.profile_completeness_score > 50) {
-      bits.push(`profile depth ~${profile.profile_completeness_score}%`);
+    const pc =
+      profileHubCompleteness ?? profile.profile_completeness_score ?? null;
+    if (pc != null && pc > 50) {
+      bits.push(`Profile strength ~${Math.round(pc)}%`);
     }
     if (!bits.length) return null;
     return `${bits.join(" · ")} — order adapts to your signals.`;
@@ -135,7 +199,10 @@ export function DashboardHomeExperience({
 
   const profileCompleteness = Math.min(
     100,
-    Math.max(0, profile?.profile_completeness_score ?? 0)
+    Math.max(
+      0,
+      profileHubCompleteness ?? profile?.profile_completeness_score ?? 0
+    )
   );
   const targetingLine = (() => {
     const bits: string[] = [];
@@ -194,6 +261,8 @@ export function DashboardHomeExperience({
           <JourneyBar currentStage={journeyStage} />
         </div>
 
+        <UserSnapshotCard snapshot={wowTrustSnapshot} />
+
         <section
           aria-label="What to do next"
           className="scroll-mt-6 rounded-2xl border border-border/70 bg-card/55 p-4 shadow-sm backdrop-blur-sm md:p-5"
@@ -207,6 +276,7 @@ export function DashboardHomeExperience({
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <Link
               href="/dashboard/score-upgrade"
+              prefetch
               className={cn(
                 buttonVariants({ variant: "default", size: "sm" }),
                 "h-11 justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-md hover:opacity-95"
@@ -217,6 +287,7 @@ export function DashboardHomeExperience({
             </Link>
             <Link
               href={MODULE_ROUTES.discover}
+              prefetch
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "h-11 justify-center gap-2 rounded-xl border-border/80 bg-background/60 backdrop-blur-sm"
@@ -227,6 +298,7 @@ export function DashboardHomeExperience({
             </Link>
             <Link
               href={MODULE_ROUTES.finance}
+              prefetch
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "h-11 justify-center gap-2 rounded-xl border-border/80 bg-background/60 backdrop-blur-sm"
@@ -269,6 +341,7 @@ export function DashboardHomeExperience({
               </div>
               <Link
                 href="/dashboard/score-upgrade"
+                prefetch
                 className={cn(
                   buttonVariants({ size: "lg" }),
                   "inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary px-6 py-3 text-sm font-semibold text-white shadow-elegant ring-glow hover:opacity-95 lg:self-center"
@@ -295,6 +368,7 @@ export function DashboardHomeExperience({
           </div>
           <Link
             href="/connect#alerts"
+            prefetch
             className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background/70 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md active:scale-95"
             aria-label="Notifications and alerts"
           >
@@ -338,11 +412,35 @@ export function DashboardHomeExperience({
                   </p>
                 ) : null}
                 <h3 className="mt-3 font-heading text-xl font-semibold leading-snug">
-                  You&apos;re tracking in the top {peer}% of similar early profiles.
+                  Personalized read from your profile and latest scorer snapshot
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Three small wins this week compound into clearer admits and financing confidence.
-                </p>
+                {featureHome ? (
+                  <div className="mt-3 rounded-xl border border-brand-primary/20 bg-brand-primary/5 px-4 py-3 text-sm leading-relaxed">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                      Your decision snapshot · GradScore {featureHome.grad_score}
+                    </p>
+                    <p className="mt-2 text-muted-foreground">{featureHome.short_explanation}</p>
+                    {featureHome.key_actions.length ? (
+                      <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-foreground/90">
+                        {featureHome.key_actions.slice(0, 4).map((a, i) => (
+                          <li key={i}>{a}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
+                <ul className="mt-2 space-y-2 text-sm leading-relaxed text-muted-foreground">
+                  {(personalizedLines.length ? personalizedLines : []).map((line, i) => (
+                    <li key={i} className="list-inside list-disc marker:text-brand-primary">
+                      {line}
+                    </li>
+                  ))}
+                  {!personalizedLines.length ? (
+                    <li className="list-none pl-0 text-muted-foreground">
+                      Enrich profile intelligence and run your GradScore once to unlock destination, cost, and placement-aware lines here.
+                    </li>
+                  ) : null}
+                </ul>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-amber/20 px-2.5 py-1 font-medium text-brand-amber">
                     <Flame className="h-3.5 w-3.5" />
@@ -441,6 +539,7 @@ export function DashboardHomeExperience({
               </div>
               <Link
                 href={ctaHref}
+                prefetch
                 className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-md transition-[transform,box-shadow] hover:shadow-lg pressable sm:self-center"
               >
                 Continue
@@ -489,6 +588,7 @@ export function DashboardHomeExperience({
             </div>
             <Link
               href="/plan/timeline"
+              prefetch
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "inline-flex shrink-0 gap-2 rounded-xl border-border/80"
@@ -500,14 +600,14 @@ export function DashboardHomeExperience({
           </GlassCard>
         </section>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-1">
+        <div className="grid min-h-[220px] items-stretch gap-4 md:grid-cols-3">
+          <div className="md:col-span-1 min-h-0">
             <QuickInsightTile risk={risk} />
           </div>
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 min-h-0">
             <NewsFeedTile items={newsItems} caption={newsCaption} />
           </div>
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 min-h-0">
             <WeeklyTasksTile tasks={tasks} completedIds={completedTaskIds} />
           </div>
         </div>
@@ -519,6 +619,7 @@ export function DashboardHomeExperience({
               <Link
                 key={m.title}
                 href={m.href}
+                prefetch
                 className={cn(
                   buttonVariants({ variant: "outline" }),
                   "h-auto flex-col items-start gap-1 border-border/70 bg-card/50 py-4 text-left whitespace-normal backdrop-blur-sm transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-md"
@@ -543,7 +644,7 @@ export function DashboardHomeExperience({
               Recent activity
             </h2>
             <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              {events.slice(0, 5).map((e) => (
+              {events.map((e) => (
                 <li key={e.id}>
                   <span className="font-medium text-foreground">{e.event_type}</span>
                   {e.createdAtLabel ? (

@@ -1,11 +1,13 @@
 import { convertToModelMessages, type UIMessage } from "ai";
 import { z } from "zod";
 
-import type { GeminiEngineId } from "@/lib/ai/env";
-import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
+import { getGeminiApiKey } from "@/lib/ai/env";
 import type { MentorMode } from "@/lib/ai/mentor-mode";
 import { buildMentorSystemPrompt } from "@/lib/ai/prompts/mentor";
 import { streamMentorConversation } from "@/lib/ai/gemini-chat";
+import { ensureGroundedProfileContext } from "@/lib/profile/ensure-grounded-context";
+import { formatGroundedContextForPrompt } from "@/lib/profile/grounded-context";
+import { buildStudentIntelligence } from "@/lib/profile/student-intelligence";
 import { buildStudentMasterProfile } from "@/lib/profile/student-master-profile";
 import { createServerClient } from "@/lib/db/supabase";
 import { getLatestRiskScoreByUserId } from "@/lib/db/queries/risk_scores";
@@ -19,17 +21,11 @@ export const maxDuration = 60;
 
 const mentorModeSchema = z.enum(["dashboard", "discover", "result", "profile"]);
 
-function mentorModeToEngine(mode: MentorMode): GeminiEngineId {
-  if (mode === "discover") return "explore";
-  if (mode === "result") return "funding";
-  if (mode === "profile") return "profile";
-  return "dashboard";
-}
-
 const chatPostBodySchema = z.object({
   messages: z.array(z.any()),
   user_id: z.string().uuid(),
   mentor_mode: mentorModeSchema.optional(),
+  explore_context: z.string().max(8000).optional(),
 });
 
 function lastUserTextFromUiMessages(messages: UIMessage[]): string | null {
@@ -135,23 +131,28 @@ export async function POST(req: Request): Promise<Response> {
     return new Response(parsed.error.message, { status: 400 });
   }
 
-  const { messages: uiMessagesRaw, user_id, mentor_mode: mentorModeRaw } =
-    parsed.data;
+  const {
+    messages: uiMessagesRaw,
+    user_id,
+    mentor_mode: mentorModeRaw,
+    explore_context: exploreContextRaw,
+  } = parsed.data;
   const mentor_mode: MentorMode = mentorModeRaw ?? "dashboard";
   const uiMessages = uiMessagesRaw as UIMessage[];
   if (user_id !== appUser.id) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  const engine = mentorModeToEngine(mentor_mode);
-  if (!getGeminiApiKeyForEngine(engine)) {
+  if (!getGeminiApiKey()) {
     return new Response(GRADRIGHT_AI_FALLBACK_MESSAGE, { status: 503 });
   }
 
-  const [profile, risk, master] = await Promise.all([
+  const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+  const [profile, risk, master, grounded] = await Promise.all([
     getStudentProfileByUserId(appUser.id),
     getLatestRiskScoreByUserId(appUser.id),
     buildStudentMasterProfile(appUser.id),
+    ensureGroundedProfileContext(supabase, meta, { force: false }),
   ]);
 
   const profileContext = buildUserProfileContext({
@@ -160,8 +161,25 @@ export async function POST(req: Request): Promise<Response> {
     risk,
   });
   const lastUserMessage = lastUserTextFromUiMessages(uiMessages);
+  const intelligence = buildStudentIntelligence(profile);
+  const intelligence_digest = [
+    `cgpa_band: ${intelligence.cgpa_band}`,
+    `risk_level: ${intelligence.risk_level}`,
+    `financial_capacity: ${intelligence.financial_capacity}`,
+    `scholarship_need: ${intelligence.scholarship_need}`,
+    `career_direction: ${intelligence.career_direction}`,
+    `ambition_level: ${intelligence.ambition_level}`,
+    `profile_summary: ${intelligence.profile_summary}`,
+  ].join("\n");
+  const explore_context = exploreContextRaw?.trim() || null;
+  const grounded_web_context =
+    formatGroundedContextForPrompt(grounded.context) || null;
+
   const system = buildMentorSystemPrompt(profileContext, mentor_mode, master, {
     lastUserMessage,
+    explore_context,
+    intelligence_digest,
+    grounded_web_context,
   });
 
   const modelMessages = await convertToModelMessages(
@@ -169,9 +187,7 @@ export async function POST(req: Request): Promise<Response> {
   );
 
   try {
-    const result = streamMentorConversation(system, modelMessages, {
-      engine,
-    });
+    const result = streamMentorConversation(system, modelMessages);
     return result.toUIMessageStreamResponse();
   } catch (e) {
     console.error("[POST /api/ai/chat]", e);

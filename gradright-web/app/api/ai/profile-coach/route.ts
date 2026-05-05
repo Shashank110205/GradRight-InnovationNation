@@ -1,10 +1,11 @@
-import { getGeminiApiKeyForEngine } from "@/lib/ai/env";
+import { getGeminiApiKey } from "@/lib/ai/env";
+import { logGeminiError, logGeminiRequest } from "@/lib/ai/gemini-forensic-log";
+import { safeGenerate } from "@/lib/ai/orchestrator";
 import { GRADRIGHT_AI_FALLBACK_MESSAGE } from "@/lib/ai/psychology-layer";
 import { createServerClient } from "@/lib/db/supabase";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { enforceAiChatRateLimit } from "@/lib/rate-limit/ai-chat";
 import { apiError, apiSuccess } from "@/lib/types";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -80,8 +81,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  const apiKey = getGeminiApiKeyForEngine("profile");
-  if (!apiKey) {
+  if (!getGeminiApiKey()) {
     return NextResponse.json(
       apiSuccess({
         advance: true,
@@ -89,16 +89,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       })
     );
   }
-
-  const modelId = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelId,
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.2,
-    },
-  });
 
   const prompt = `You are GradRight Profile Intelligence coach. Tone: warm, never shaming; redirect off-topic with premium calm.
 The student is in a structured profile flow.
@@ -117,17 +107,27 @@ Rules:
 - Never ask a new unrelated question; keep them on the current step.`;
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    logGeminiRequest("profile-coach", getGeminiApiKey(), prompt.length);
+
+    const res = await safeGenerate({
+      module: "profile-coach",
+      userPrompt: prompt,
+      expectJson: true,
+      temperature: 0.2,
+      maxTokens: 600,
     });
-    const text = result.response.text();
-    const raw = JSON.parse(text) as unknown;
-    const out = coachOutSchema.safeParse(raw);
+
+    if (!res.ok) {
+      return NextResponse.json(apiSuccess({ advance: true }));
+    }
+
+    const out = coachOutSchema.safeParse(res.data);
     if (!out.success) {
       return NextResponse.json(apiSuccess({ advance: true }));
     }
     return NextResponse.json(apiSuccess(out.data));
   } catch (e) {
+    logGeminiError("profile-coach", e);
     console.error("[profile-coach]", e);
     return NextResponse.json(apiSuccess({ advance: true }));
   }

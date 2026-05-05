@@ -1,0 +1,222 @@
+[
+  {
+    "id": "s0",
+    "name": "Fulbright track",
+    "host_country": "Germany",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s1",
+    "name": "DAAD EPOS track",
+    "host_country": "United States",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s2",
+    "name": "Vanier CGS track",
+    "host_country": "Canada",
+    "field_focus": [
+      "Business"
+    ],
+    "coverage": "stipend",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s3",
+    "name": "Chevening track",
+    "host_country": "United Kingdom",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s4",
+    "name": "Australia Awards track",
+    "host_country": "Australia",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s5",
+    "name": "Holland Scholarship track",
+    "host_country": "Netherlands",
+    "field_focus": [
+      "Business"
+    ],
+    "coverage": "stipend",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s6",
+    "name": "Eiffel track",
+    "host_country": "France",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s7",
+    "name": "Singapore SINGA track",
+    "host_country": "Singapore",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s8",
+    "name": "Swiss Government Excellence track",
+    "host_country": "Switzerland",
+    "field_focus": [
+      "Business"
+    ],
+    "coverage": "stipend",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s9",
+    "name": "Government of Ireland track",
+    "host_country": "Ireland",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s10",
+    "name": "Erasmus Mundus track",
+    "host_country": "Germany",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s11",
+    "name": "Commonwealth track",
+    "host_country": "United States",
+    "field_focus": [
+      "Business"
+    ],
+    "coverage": "stipend",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s12",
+    "name": "AAUW track",
+    "host_country": "Canada",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s13",
+    "name": "Inlaks track",
+    "host_country": "United Kingdom",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s14",
+    "name": "KC Mahindra track",
+    "host_country": "Australia",
+    "field_focus": [
+      "Business"
+    ],
+    "coverage": "stipend",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s15",
+    "name": "J N Tata track",
+    "host_country": "Netherlands",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s16",
+    "name": "Rhodes track",
+    "host_country": "France",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s17",
+    "name": "Gates Cambridge track",
+    "host_country": "Singapore",
+    "field_focus": [
+      "Business"
+    ],
+    "coverage": "stipend",
+    "competitiveness": "high",
+    "season": "Fall"
+  },
+  {
+    "id": "s18",
+    "name": "ETH Excellence track",
+    "host_country": "Switzerland",
+    "field_focus": [
+      "Computer Science"
+    ],
+    "coverage": "full",
+    "competitiveness": "medium",
+    "season": "Winter"
+  },
+  {
+    "id": "s19",
+    "name": "McCall MacBain track",
+    "host_country": "Ireland",
+    "field_focus": [
+      "Engineering"
+    ],
+    "coverage": "partial",
+    "competitiveness": "high",
+    "season": "Fall"
+  }
+]

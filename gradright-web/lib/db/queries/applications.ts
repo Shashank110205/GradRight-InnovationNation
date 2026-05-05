@@ -42,6 +42,7 @@ type NbfcJoinRow = {
   program: string | null;
   target_country: string | null;
   risk_label: string | null;
+  risk_score_raw: unknown;
   placement_prob_6m: unknown;
   salary_band_low_lpa: unknown;
   salary_band_high_lpa: unknown;
@@ -52,6 +53,7 @@ type NbfcJoinRow = {
   scholarship_priority: string | null;
   loan_needed: boolean | null;
   profile_completeness_score: number | null;
+  risk_appetite: string | null;
 };
 
 function buildNbfcListItem(r: NbfcJoinRow): NBFCApplicationListItem {
@@ -61,16 +63,17 @@ function buildNbfcListItem(r: NbfcJoinRow): NBFCApplicationListItem {
     Math.round((docs.length / DOCUMENT_TARGETS_FOR_COMPLETENESS) * 100)
   );
 
-  const placement_prob_6m = r.placement_prob_6m
-    ? Number(r.placement_prob_6m)
+  const placement_prob_6m_raw = Number(r.placement_prob_6m);
+  const placement_prob_6m = Number.isFinite(placement_prob_6m_raw)
+    ? Math.min(1, Math.max(0, placement_prob_6m_raw))
     : 0;
-  const salary_band_low_lpa = r.salary_band_low_lpa
+  const salary_band_low_lpa = Number.isFinite(Number(r.salary_band_low_lpa))
     ? Number(r.salary_band_low_lpa)
     : 0;
-  const salary_band_high_lpa = r.salary_band_high_lpa
+  const salary_band_high_lpa = Number.isFinite(Number(r.salary_band_high_lpa))
     ? Number(r.salary_band_high_lpa)
     : 0;
-  const loan_amount_requested = r.loan_amount_requested
+  const loan_amount_requested = Number.isFinite(Number(r.loan_amount_requested))
     ? Number(r.loan_amount_requested)
     : 0;
 
@@ -117,6 +120,35 @@ function buildNbfcListItem(r: NbfcJoinRow): NBFCApplicationListItem {
     candidate_quality = "elevated_risk";
   }
 
+  const riskRawNum = Number(r.risk_score_raw);
+  const jobDemandNorm = Number.isFinite(riskRawNum)
+    ? Math.min(100, Math.max(0, riskRawNum))
+    : Math.min(100, Math.max(0, placement_prob_6m * 100));
+  const salaryNormRaw = salMid > 0 ? Math.min(100, (salMid / 55) * 55) : placement_prob_6m * 85;
+  const salaryNorm = Number.isFinite(salaryNormRaw) ? salaryNormRaw : 0;
+  const placementNormRaw = placement_prob_6m * 100;
+  const placementNorm = Number.isFinite(placementNormRaw)
+    ? Math.min(100, Math.max(0, placementNormRaw))
+    : 0;
+  const repaymentBlend = (salaryNorm + jobDemandNorm + placementNorm) / 3;
+  const repayment_score = Number.isFinite(repaymentBlend)
+    ? Math.min(100, Math.max(0, Math.round(repaymentBlend)))
+    : 0;
+
+  let risk_flag = "standard";
+  if (risk === "high" || placement_prob_6m < 0.42) {
+    risk_flag = "elevated";
+  } else if (risk === "low" && placement_prob_6m >= 0.62) {
+    risk_flag = "favorable";
+  }
+  const ra = (r.risk_appetite ?? "").toLowerCase();
+  if (ra.includes("aggressive") && (risk === "high" || placement_prob_6m < 0.5)) {
+    risk_flag = "profile_mismatch";
+  }
+  if (scholarship_dependency === "high" && placement_prob_6m < 0.55) {
+    risk_flag = "scholarship_pressure";
+  }
+
   return {
     id: r.id,
     applicant_name: r.appFullName ?? r.userFullName ?? "Unknown",
@@ -135,6 +167,8 @@ function buildNbfcListItem(r: NbfcJoinRow): NBFCApplicationListItem {
     scholarship_dependency,
     candidate_quality,
     repayment_confidence_pct,
+    repayment_score,
+    risk_flag,
   };
 }
 
@@ -457,6 +491,7 @@ export async function getNBFCApplications(
         program: loan_applications.program,
         target_country: student_profiles.target_country,
         risk_label: risk_scores.risk_label,
+        risk_score_raw: risk_scores.risk_score_raw,
         placement_prob_6m: risk_scores.placement_prob_6m,
         salary_band_low_lpa: risk_scores.salary_band_low_lpa,
         salary_band_high_lpa: risk_scores.salary_band_high_lpa,
@@ -467,6 +502,7 @@ export async function getNBFCApplications(
         scholarship_priority: student_profiles.scholarship_priority,
         loan_needed: student_profiles.loan_needed,
         profile_completeness_score: student_profiles.profile_completeness_score,
+        risk_appetite: student_profiles.risk_appetite,
       })
       .from(loan_applications)
       .innerJoin(users, eq(loan_applications.user_id, users.id))

@@ -22,7 +22,7 @@ export function QuickInsightTile({
       <p className="mt-3 text-sm text-muted-foreground">
         {label ? (
           <>
-            Your latest model band is{" "}
+            Your latest placement outlook band is{" "}
             <span className="font-medium capitalize text-foreground">{label}</span>
             {prob != null ? (
               <>
@@ -46,6 +46,7 @@ export function QuickInsightTile({
       <div className="mt-auto pt-4">
         <Link
           href="/onboarding"
+          prefetch
           className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full")}
         >
           Refine profile

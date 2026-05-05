@@ -75,6 +75,7 @@ export function PrimaryCTACard({ stage }: { stage: JourneyStage }) {
         </div>
         <Link
           href={href}
+          prefetch
           className={cn(
             "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-brand-primary shadow-md transition hover:bg-white/95"
           )}

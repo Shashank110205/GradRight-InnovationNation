@@ -463,7 +463,7 @@ export function LandingPage() {
             Community
           </div>
           <h3 className="mt-3 font-heading text-3xl font-bold">
-            Your cohort is already forming.
+            Students on similar paths are already here.
           </h3>
           <p className="mt-2 text-muted-foreground">
             Country crews, challenges, and wins — plus AI nudges that keep you

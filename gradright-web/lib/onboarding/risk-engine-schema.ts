@@ -33,6 +33,10 @@ export const riskEngineResponseSchema = z.object({
   intelligence_source_note: z.string().optional(),
   score_confidence_user_message: z.string().optional(),
   normalized_signal_snapshot: z.record(z.string(), z.number()).optional(),
+  profile_completeness_score: z.number().min(0).max(100).optional(),
+  readiness_signals: z.record(z.string(), z.string()).optional(),
+  strengths: z.array(z.string()).optional(),
+  improvement_areas: z.array(z.string()).optional(),
 });
 
 export type NormalizedRiskEngineResult = z.infer<typeof riskEngineResponseSchema>;

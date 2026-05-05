@@ -1,0 +1,282 @@
+[
+  {
+    "id": "u0",
+    "name": "TUM cohort pack",
+    "country": "Germany",
+    "ranking_band": "top20",
+    "annual_tuition_usd": 4200,
+    "placement_index": 88,
+    "roi_index": 95,
+    "fields": [
+      "Computer Science",
+      "Engineering"
+    ],
+    "notes": "Low public tuition; strong employability in EU engineering hubs."
+  },
+  {
+    "id": "u1",
+    "name": "Georgia Tech cohort pack",
+    "country": "United States",
+    "ranking_band": "top50",
+    "annual_tuition_usd": 52000,
+    "placement_index": 76,
+    "roi_index": 82.33333333333333,
+    "fields": [
+      "Engineering",
+      "Business"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u2",
+    "name": "UWaterloo cohort pack",
+    "country": "Canada",
+    "ranking_band": "top100",
+    "annual_tuition_usd": 28000,
+    "placement_index": 65,
+    "roi_index": 95,
+    "fields": [
+      "Business",
+      "Life Sciences"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u3",
+    "name": "Imperial cohort pack",
+    "country": "United Kingdom",
+    "ranking_band": "regional",
+    "annual_tuition_usd": 22400,
+    "placement_index": 52,
+    "roi_index": 95,
+    "fields": [
+      "Life Sciences",
+      "Data Science"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u4",
+    "name": "UNSW cohort pack",
+    "country": "Australia",
+    "ranking_band": "top20",
+    "annual_tuition_usd": 35000,
+    "placement_index": 88,
+    "roi_index": 95,
+    "fields": [
+      "Data Science",
+      "Public Policy"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u5",
+    "name": "TU Delft cohort pack",
+    "country": "Netherlands",
+    "ranking_band": "top50",
+    "annual_tuition_usd": 24000,
+    "placement_index": 76,
+    "roi_index": 95,
+    "fields": [
+      "Public Policy",
+      "Computer Science"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u6",
+    "name": "Sciences Po cohort pack",
+    "country": "France",
+    "ranking_band": "top100",
+    "annual_tuition_usd": 24800,
+    "placement_index": 65,
+    "roi_index": 95,
+    "fields": [
+      "Computer Science",
+      "Engineering"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u7",
+    "name": "NUS cohort pack",
+    "country": "Singapore",
+    "ranking_band": "regional",
+    "annual_tuition_usd": 25600,
+    "placement_index": 52,
+    "roi_index": 95,
+    "fields": [
+      "Engineering",
+      "Business"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u8",
+    "name": "ETH Zurich cohort pack",
+    "country": "Switzerland",
+    "ranking_band": "top20",
+    "annual_tuition_usd": 26400,
+    "placement_index": 88,
+    "roi_index": 95,
+    "fields": [
+      "Business",
+      "Life Sciences"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u9",
+    "name": "Trinity College Dublin cohort pack",
+    "country": "Ireland",
+    "ranking_band": "top50",
+    "annual_tuition_usd": 27200,
+    "placement_index": 76,
+    "roi_index": 95,
+    "fields": [
+      "Life Sciences",
+      "Data Science"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u10",
+    "name": "LMU Munich cohort pack",
+    "country": "Germany",
+    "ranking_band": "top100",
+    "annual_tuition_usd": 4200,
+    "placement_index": 65,
+    "roi_index": 95,
+    "fields": [
+      "Data Science",
+      "Public Policy"
+    ],
+    "notes": "Low public tuition; strong employability in EU engineering hubs."
+  },
+  {
+    "id": "u11",
+    "name": "UT Austin cohort pack",
+    "country": "United States",
+    "ranking_band": "regional",
+    "annual_tuition_usd": 52000,
+    "placement_index": 52,
+    "roi_index": 74.33333333333333,
+    "fields": [
+      "Public Policy",
+      "Computer Science"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u12",
+    "name": "UBC cohort pack",
+    "country": "Canada",
+    "ranking_band": "top20",
+    "annual_tuition_usd": 28000,
+    "placement_index": 88,
+    "roi_index": 95,
+    "fields": [
+      "Computer Science",
+      "Engineering"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u13",
+    "name": "Oxford cohort pack",
+    "country": "United Kingdom",
+    "ranking_band": "top50",
+    "annual_tuition_usd": 30400,
+    "placement_index": 76,
+    "roi_index": 95,
+    "fields": [
+      "Engineering",
+      "Business"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u14",
+    "name": "Melbourne cohort pack",
+    "country": "Australia",
+    "ranking_band": "top100",
+    "annual_tuition_usd": 35000,
+    "placement_index": 65,
+    "roi_index": 92.66666666666667,
+    "fields": [
+      "Business",
+      "Life Sciences"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u15",
+    "name": "Wageningen cohort pack",
+    "country": "Netherlands",
+    "ranking_band": "regional",
+    "annual_tuition_usd": 32000,
+    "placement_index": 52,
+    "roi_index": 90.33333333333333,
+    "fields": [
+      "Life Sciences",
+      "Data Science"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u16",
+    "name": "HEC Paris cohort pack",
+    "country": "France",
+    "ranking_band": "top20",
+    "annual_tuition_usd": 32800,
+    "placement_index": 88,
+    "roi_index": 95,
+    "fields": [
+      "Data Science",
+      "Public Policy"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u17",
+    "name": "NTU cohort pack",
+    "country": "Singapore",
+    "ranking_band": "top50",
+    "annual_tuition_usd": 33600,
+    "placement_index": 76,
+    "roi_index": 95,
+    "fields": [
+      "Public Policy",
+      "Computer Science"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u18",
+    "name": "EPFL cohort pack",
+    "country": "Switzerland",
+    "ranking_band": "top100",
+    "annual_tuition_usd": 34400,
+    "placement_index": 65,
+    "roi_index": 92.66666666666667,
+    "fields": [
+      "Computer Science",
+      "Engineering"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  },
+  {
+    "id": "u19",
+    "name": "UCD cohort pack",
+    "country": "Ireland",
+    "ranking_band": "regional",
+    "annual_tuition_usd": 35200,
+    "placement_index": 52,
+    "roi_index": 88.33333333333333,
+    "fields": [
+      "Engineering",
+      "Business"
+    ],
+    "notes": "Benchmark against living costs and post-study work rights."
+  }
+]

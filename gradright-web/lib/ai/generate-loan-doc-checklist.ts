@@ -2,7 +2,10 @@ import type { LatestRiskScoreSummary } from "@/lib/db/queries/risk_scores";
 import type { StudentProfile } from "@/lib/types";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import { resolveGeminiApiKey } from "@/lib/ai/resolve-gemini-api-key";
+import { getGeminiApiKey } from "@/lib/ai/env";
+import { getGeminiModelId } from "@/lib/ai/providers/gemini";
+import { logGeminiError, logGeminiRequest } from "@/lib/ai/gemini-forensic-log";
+import { safeGeminiGenerate } from "@/lib/ai/gemini-client";
 
 const SYSTEM = `You help Indian students prepare education loan paperwork for study abroad.
 Return ONLY valid JSON: { "items": string[] } where items are 8-12 short checklist lines (each one line, actionable).
@@ -39,17 +42,17 @@ function parseItems(text: string): string[] | null {
   }
 }
 
+/** C-002 / C-003: Loan doc checklist — Gemini (single key). */
 export async function generateLoanDocumentChecklist(input: {
   profile: StudentProfile | null;
   risk: LatestRiskScoreSummary | null;
 }): Promise<{ items: string[]; source: "gemini" | "template" }> {
   const fallback = templateChecklist(input.profile);
-  const apiKey = resolveGeminiApiKey();
+  const apiKey = getGeminiApiKey();
   if (!apiKey) {
     return { items: fallback, source: "template" };
   }
 
-  const modelId = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
   const blob = {
     target_country: input.profile?.target_country,
     degree_type: input.profile?.degree_type,
@@ -62,17 +65,26 @@ export async function generateLoanDocumentChecklist(input: {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: modelId,
+      model: getGeminiModelId(),
       systemInstruction: SYSTEM,
     });
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: JSON.stringify(blob) }],
-        },
-      ],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
+    logGeminiRequest(
+      "generateLoanDocumentChecklist",
+      apiKey,
+      SYSTEM.length + JSON.stringify(blob).length
+    );
+    const result = await safeGeminiGenerate({
+      module: "generateLoanDocumentChecklist",
+      run: () =>
+        model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: JSON.stringify(blob) }],
+            },
+          ],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
+        }),
     });
     const text = result.response.text()?.trim();
     if (!text) return { items: fallback, source: "template" };
@@ -80,6 +92,7 @@ export async function generateLoanDocumentChecklist(input: {
     if (!items) return { items: fallback, source: "template" };
     return { items, source: "gemini" };
   } catch (e) {
+    logGeminiError("generateLoanDocumentChecklist", e);
     console.warn("[generateLoanDocumentChecklist]", e);
     return { items: fallback, source: "template" };
   }

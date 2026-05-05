@@ -59,6 +59,10 @@ class ScoreOutput(BaseModel):
     intelligence_source_note: str = "Using benchmark intelligence"
     score_confidence_user_message: str = ""
     normalized_signal_snapshot: dict[str, float] = Field(default_factory=dict)
+    profile_completeness_score: int = Field(default=0, ge=0, le=100)
+    readiness_signals: dict[str, str] = Field(default_factory=dict)
+    strengths: list[str] = Field(default_factory=list)
+    improvement_areas: list[str] = Field(default_factory=list)
 
 
 class AdmissionInput(BaseModel):
