@@ -5,6 +5,11 @@ import {
 } from "@/lib/db/queries/student_profiles";
 import { getUserBySupabaseUID } from "@/lib/db/queries/users";
 import { mergeProfileCompletenessIntoMetadata } from "@/lib/profile/calculate-profile-completeness";
+import {
+  mergeProfileIntelligence,
+  normalizeProfileIntelligence,
+} from "@/lib/profile/normalize-profile-intelligence";
+import { scheduleEnsureGroundedProfileContext } from "@/lib/profile/schedule-grounded-context";
 import { applyProfileHubPatch } from "@/lib/profile/user-profile-hub";
 import { enforceAiChatRateLimit } from "@/lib/rate-limit/ai-chat";
 import { apiError, apiSuccess } from "@/lib/types";
@@ -150,7 +155,37 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
 
     const prevMeta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
-    const patched = applyProfileHubPatch(prevMeta, {
+    const prevPi = prevMeta.profile_intelligence;
+    const currentPi = mergeProfileIntelligence(prevPi, {});
+    const mergedPi = normalizeProfileIntelligence(
+      mergeProfileIntelligence(prevPi, {
+        resume: {
+          ...currentPi.resume,
+          internships: body.internships.map((i) => `${i.org}${i.role ? ` — ${i.role}` : ""}`),
+          projects: body.projects.map((p) => `${p.title}${p.description ? ` — ${p.description}` : ""}`),
+          skills: body.skills,
+        },
+      })
+    );
+
+    const baseMeta: Record<string, unknown> = {
+      ...prevMeta,
+      profile_intelligence: {
+        ...(prevPi && typeof prevPi === "object" && !Array.isArray(prevPi) ? prevPi : {}),
+        resume: mergedPi.resume,
+        goals:
+          prevPi &&
+          typeof prevPi === "object" &&
+          !Array.isArray(prevPi) &&
+          "goals" in prevPi &&
+          prevPi.goals &&
+          typeof prevPi.goals === "object"
+            ? prevPi.goals
+            : mergedPi.goals,
+      },
+    };
+
+    const patched = applyProfileHubPatch(baseMeta, {
       resume_gemini: {
         saved_at: nowIso,
         resume_storage_path: path,
@@ -159,11 +194,15 @@ export async function POST(request: Request): Promise<NextResponse> {
         internships: body.internships as unknown[],
         estimated_total_experience_years: est ?? null,
       },
+      resume_snapshot: mergedPi.resume,
+      decision_cache: null,
     });
     const nextMeta = mergeProfileCompletenessIntoMetadata(patched);
     const { error: hubErr } = await supabase.auth.updateUser({ data: nextMeta });
     if (hubErr) {
       console.error("[profile-chat-extraction-save] profile_hub", hubErr);
+    } else {
+      scheduleEnsureGroundedProfileContext(supabase, nextMeta);
     }
 
     return NextResponse.json(

@@ -5,7 +5,13 @@ import { MessageCircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function OpenMentorButton({ className }: { className?: string }) {
+export function OpenMentorButton({
+  className,
+  label = "Open Mentor Companion",
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
     <Button
       type="button"
@@ -19,7 +25,7 @@ export function OpenMentorButton({ className }: { className?: string }) {
       }}
     >
       <MessageCircle className="size-4" aria-hidden />
-      Open AI mentor
+      {label}
     </Button>
   );
 }

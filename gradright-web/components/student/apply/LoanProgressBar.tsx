@@ -14,8 +14,12 @@ export function LoanProgressBar({ currentStep }: { currentStep: number }) {
         <span>
           Step {step + 1} of {TOTAL_STEPS}
         </span>
+        <span>{Math.round(pct)}% complete</span>
       </div>
       <Progress value={pct} className="h-2" />
+      <p className="text-xs text-muted-foreground">
+        Saved automatically. Typical completion time: 8-12 minutes.
+      </p>
     </div>
   );
 }

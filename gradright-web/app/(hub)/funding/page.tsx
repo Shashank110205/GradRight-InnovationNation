@@ -69,6 +69,19 @@ export default async function FundingHubPage() {
     ctx.appUser.full_name?.trim() ||
     ctx.authUser.email?.split("@")[0] ||
     "Student";
+  const targetCountry = profile.target_country?.trim() || "your target country";
+  const programHint =
+    [profile.degree_type, profile.broad_field].filter(Boolean).join(" · ") ||
+    "your selected program";
+  const universityHint = profile.target_universities?.[0]?.trim() || "your shortlisted university";
+  const maxSuggestedLoan = initialEligibility?.max_recommended_loan ?? defaultLoan;
+  const readinessBand = initialEligibility?.eligibility_band ?? "moderate";
+  const readinessTone =
+    readinessBand === "likely"
+      ? "You are in a stronger starting position."
+      : readinessBand === "unlikely"
+        ? "You can still improve this with structure."
+        : "You have a workable baseline to build from.";
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -77,53 +90,96 @@ export default async function FundingHubPage() {
           Funding · How can I do this safely?
         </p>
         <h1 className="mt-2 font-heading text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-          Build confidence before you commit
+          Personalized funding clarity for {displayName}
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Visibility first: costs, living velocity, scholarships, and readiness. Smart financing
-          and EMI tools stay here when you choose to use them — no pressure narrative.
+          Built from your Profile Hub signals ({targetCountry}, {programHint}). This module explains
+          your likely cost, living burden, affordability confidence, financing process, and EMI
+          trade-offs in one connected flow.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="#cost-planner" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+            Total cost
+          </Link>
+          <Link href="#living" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+            Living cost
+          </Link>
+          <Link href="#readiness" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+            Can you afford
+          </Link>
+          <Link
+            href="#smart-financing"
+            className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
+          >
+            Financing process
+          </Link>
+          <Link href="#emi" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+            EMI
+          </Link>
+        </div>
       </div>
 
       <section id="readiness" className="scroll-mt-24">
         <GlassCard className="border-brand-primary/20 bg-brand-primary/5 p-5 md:p-6">
-          <h2 className="font-heading text-lg font-semibold text-foreground">Funding readiness</h2>
+          <h2 className="font-heading text-lg font-semibold text-foreground">Can you afford this plan?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            If you can explain your monthly burn and one backup plan, you&apos;re already ahead of
-            most applicants. Use the blocks below in order — skip anything that doesn&apos;t apply
-            yet.
+            {readinessTone} Your current affordability estimate aligns around{" "}
+            <span className="font-medium text-foreground">
+              ₹
+              {new Intl.NumberFormat("en-IN").format(Math.round(maxSuggestedLoan))}
+            </span>{" "}
+            as a practical upper reference (illustrative).
           </p>
           <ul className="mt-4 list-inside list-disc space-y-1 text-sm text-muted-foreground">
-            <li>Ground truth on tuition + living (rough ranges are fine).</li>
-            <li>Scholarship categories that match your profile signals.</li>
-            <li>Career-linked EMI stress tests only when you want them.</li>
+            <li>
+              Profile-aware confidence: country <span className="font-medium text-foreground">{targetCountry}</span>,
+              program <span className="font-medium text-foreground">{programHint}</span>.
+            </li>
+            <li>Grounded explainability: every estimate is tied to assumptions shown on the screen.</li>
+            <li>Fear reduction: we show best-case and stress-case, not just one number.</li>
           </ul>
         </GlassCard>
       </section>
 
       <div className="grid gap-4 md:grid-cols-2">
         <section id="cost-planner" className="scroll-mt-24">
-          <GlassCard className="h-full p-5">
-            <h2 className="font-heading text-lg font-semibold text-foreground">Cost planner</h2>
+          <GlassCard className="h-full p-5 sm:p-6">
+            <h2 className="font-heading text-lg font-semibold text-foreground">Total cost planner</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Illustrative two-year program cost (from your budget band):{" "}
+              For {targetCountry} and your current profile band, illustrative two-year cost is{" "}
               <span className="font-medium text-foreground">
                 ≈ {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(estimatedProgramCostInr)}
               </span>
-              . Tune this with your admits and city choice.
+              . Use this as baseline before admit-level tuning.
             </p>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Official fees change by intake — always verify on the program page.
-            </p>
+            <div className="mt-4 grid gap-2 text-sm">
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <span className="text-muted-foreground">Country signal:</span>{" "}
+                <span className="font-medium text-foreground">{targetCountry}</span>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <span className="text-muted-foreground">Program signal:</span>{" "}
+                <span className="font-medium text-foreground">{programHint}</span>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <span className="text-muted-foreground">University focus:</span>{" "}
+                <span className="font-medium text-foreground">{universityHint}</span>
+              </div>
+            </div>
           </GlassCard>
         </section>
         <section id="living" className="scroll-mt-24">
-          <GlassCard className="h-full p-5">
+          <GlassCard className="h-full p-5 sm:p-6">
             <h2 className="font-heading text-lg font-semibold text-foreground">Living expenses</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Model rent + food + transport as monthly velocity, not a single lump sum. Add a 10%
-              buffer for surprises and FX swings.
+              For better decision quality, model monthly burn as: rent + groceries + transport +
+              insurance + emergency buffer. Keep a 10-15% contingency for FX and city variation.
             </p>
+            <ul className="mt-3 list-inside list-disc space-y-1 text-sm text-muted-foreground">
+              <li>Track monthly velocity, not only annual lump sum.</li>
+              <li>Build one lean budget and one realistic budget before finalizing loan size.</li>
+              <li>Avoid over-borrowing by separating essentials from lifestyle spend.</li>
+            </ul>
             <Link
               href="/explore/articles/financial-literacy-abroad"
               className={cn(
@@ -157,11 +213,35 @@ export default async function FundingHubPage() {
 
       <section id="smart-financing" className="scroll-mt-24 space-y-4">
         <div>
-          <h2 className="font-heading text-xl font-semibold text-foreground">Smart financing tools</h2>
+          <h2 className="font-heading text-xl font-semibold text-foreground">Smart financing process</h2>
           <p className="mt-1 text-sm text-muted-foreground" id="emi">
-            EMI understanding and eligibility hints — optional, numbers are illustrative until you
-            verify with lenders and official program costs.
+            Understand the full loan journey before applying: eligibility, co-borrower strategy,
+            collateral choice, repayment structure, and EMI comfort under realistic salary bands.
           </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <GlassCard className="p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Financing checklist
+            </p>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+              <li>Set target loan from cost minus savings/scholarship.</li>
+              <li>Choose co-borrower path and income proof strategy.</li>
+              <li>Compare collateral vs unsecured total repayment cost.</li>
+              <li>Validate moratorium, prepayment, and late-fee rules.</li>
+            </ol>
+          </GlassCard>
+          <GlassCard className="p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Repayment clarity
+            </p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-muted-foreground">
+              <li>EMI affordability must work for low-salary and median scenarios.</li>
+              <li>Check whether interest accrues during moratorium.</li>
+              <li>Prefer plans allowing partial prepayment without high penalty.</li>
+              <li>Keep 3-6 months EMI reserve for job transition risk.</li>
+            </ul>
+          </GlassCard>
         </div>
         <FinancingHubClientLoader
           displayName={displayName}
@@ -174,20 +254,20 @@ export default async function FundingHubPage() {
         />
       </section>
 
-      <GlassCard className="border-dashed border-border/80 p-5">
-        <h2 className="font-heading text-lg font-semibold text-foreground">Secure funding</h2>
+      <GlassCard className="border-dashed border-border/80 p-5 sm:p-6">
+        <h2 className="font-heading text-lg font-semibold text-foreground">Ready to move to application?</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          When documents and intent are ready, the loan workspace stays isolated from awareness
-          content — continue only if this is your active step.
+          Once this plan feels comfortable, move to the guided application workspace. Your process
+          remains structured from document readiness to final submission.
         </p>
         <Link
           href="/apply"
           className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
+            buttonVariants({ variant: "default", size: "sm" }),
             "mt-4 inline-flex"
           )}
         >
-          Go to application workspace →
+          Start funding application →
         </Link>
       </GlassCard>
     </div>

@@ -80,6 +80,38 @@ export function ExploreFeaturePageClient() {
 
   const roles = Array.isArray(c.roles) ? (c.roles as string[]) : [];
   const uniRows = Array.isArray(u.universities) ? u.universities : [];
+  const hub = (d.profile_hub as Record<string, unknown> | undefined) ?? {};
+  const onboarding =
+    hub.onboarding && typeof hub.onboarding === "object"
+      ? ((hub.onboarding as Record<string, unknown>).answers as Record<string, unknown> | undefined)
+      : undefined;
+  const countryStr =
+    onboarding && typeof onboarding.target_country === "string"
+      ? onboarding.target_country
+      : "your selected country";
+  const countries = countryStr
+    .split(/[,/]/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const field =
+    onboarding && typeof onboarding.broad_field === "string"
+      ? onboarding.broad_field
+      : "your target field";
+  const cgpa = (hub.profile_intelligence as { resume?: { cgpa?: number } } | undefined)?.resume?.cgpa;
+  const starterRows =
+    countries.length > 0
+      ? countries.map((country, i) => ({
+          tier: i === 0 ? "safe" : i === 1 ? "moderate" : "ambitious",
+          name: `${field} shortlist option ${i + 1}`,
+          country,
+          fit_reason:
+            typeof cgpa === "number" && Number.isFinite(cgpa)
+              ? `Built around your current CGPA ${cgpa.toFixed(1)} and ${field} trajectory in ${country}.`
+              : `Built around your ${field} trajectory in ${country}. Add academic details for tighter matching.`,
+          score: i === 0 ? "72" : i === 1 ? "64" : "58",
+        }))
+      : [];
 
   return (
     <div className="relative mx-auto max-w-5xl space-y-10 pb-8">
@@ -197,7 +229,22 @@ export function ExploreFeaturePageClient() {
               </p>
             </GlassCard>
           ))}
-          {!uniRows.length ? (
+          {!uniRows.length && starterRows.length
+            ? starterRows.map((row, i) => (
+                <GlassCard key={`starter-${i}`} className="flex flex-col gap-2 border-dashed border-brand-primary/35 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-brand-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-primary">
+                      {row.tier}
+                    </span>
+                    <span className="text-xs text-muted-foreground">starter score {row.score}</span>
+                  </div>
+                  <h3 className="font-heading text-base font-semibold">{row.name}</h3>
+                  <p className="text-xs text-muted-foreground">{row.country}</p>
+                  <p className="text-sm text-muted-foreground">{row.fit_reason}</p>
+                </GlassCard>
+              ))
+            : null}
+          {!uniRows.length && !starterRows.length ? (
             <GlassCard className="border-dashed p-6 text-center text-sm text-muted-foreground md:col-span-2">
               You&apos;re one step away from unlocking this insight — add destinations and goals under
               Improve Profile so we can rank programs for you.

@@ -17,7 +17,7 @@ export function SubmitStep() {
     <GlassCard className="p-6">
       <h2 className="font-heading text-lg font-semibold">Submit application</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Final step — confirm you understand how review works.
+        Final step. Confirm consent and submit to begin partner credit review.
       </p>
 
       <p className="text-sm text-muted-foreground border border-border rounded-md p-3 mt-4">
@@ -51,7 +51,7 @@ export function SubmitStep() {
           disabled={saving || !consentAccepted}
           onClick={() => void submitApplication()}
         >
-          Submit application
+          Submit to Poonawalla team
         </Button>
       </div>
     </GlassCard>

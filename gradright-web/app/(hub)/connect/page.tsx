@@ -28,13 +28,40 @@ export default function ConnectPage() {
       </div>
 
       <section id="mentor" className="scroll-mt-24">
-        <GlassCard className="border-brand-primary/25 bg-gradient-to-br from-brand-primary/10 via-card to-violet-500/10 p-6">
-          <h2 className="font-heading text-lg font-semibold text-foreground">Your Mentor</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Strategic on the home screen, aware in Explore, and specific on result pages — your
-            coach stays aligned with what you&apos;ve already told us.
+        <GlassCard className="border-brand-primary/25 bg-gradient-to-br from-brand-primary/10 via-card to-violet-500/10 p-6 sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-pink">
+            Mentor Companion
           </p>
-          <OpenMentorButton className="mt-4" />
+          <h2 className="mt-2 font-heading text-xl font-semibold text-foreground">
+            Your Mentor — clear, personal, and action-first
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Built as your study-abroad decision companion: personalized to your profile, aware of
+            your progress, and focused on what to do next instead of generic motivation.
+          </p>
+          <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+            <div className="rounded-lg border border-border/60 bg-background/70 px-3 py-2">
+              Personalized advice using your profile and goals
+            </div>
+            <div className="rounded-lg border border-border/60 bg-background/70 px-3 py-2">
+              Step-by-step help for admissions, funding, and timelines
+            </div>
+            <div className="rounded-lg border border-border/60 bg-background/70 px-3 py-2">
+              Explainable suggestions with assumptions, not black-box answers
+            </div>
+            <div className="rounded-lg border border-border/60 bg-background/70 px-3 py-2">
+              Designed to reduce confusion and speed up decisions
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <OpenMentorButton label="Start with Mentor Companion" />
+            <Link
+              href="/dashboard/score-upgrade"
+              className={cn(buttonVariants({ variant: "outline" }), "rounded-xl")}
+            >
+              Improve mentor context
+            </Link>
+          </div>
         </GlassCard>
       </section>
 

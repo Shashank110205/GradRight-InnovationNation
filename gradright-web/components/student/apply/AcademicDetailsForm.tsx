@@ -78,8 +78,8 @@ export function AcademicDetailsForm({
     <GlassCard className="p-6">
       <h2 className="font-heading text-lg font-semibold">Academic details</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Current admitting institute and program. Upload your offer letter if you
-        have one.
+        Confirm your institute and program. Offer letter helps improve lender confidence if
+        available.
       </p>
       <form onSubmit={(e) => void onSubmit(e)} className="mt-4 space-y-4">
         <div className="space-y-2">
@@ -130,7 +130,7 @@ export function AcademicDetailsForm({
         </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={saving || uploading}>
-            Save & continue
+            Save academic details
           </Button>
         </div>
       </form>

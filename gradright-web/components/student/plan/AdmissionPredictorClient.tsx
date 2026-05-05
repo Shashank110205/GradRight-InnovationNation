@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ExplainabilityPanel } from "@/components/explainability/ExplainabilityPanel";
 import { GlassCard } from "@/components/shell/GlassCard";
@@ -129,6 +129,8 @@ export function AdmissionPredictorClient() {
   const [workYrs, setWorkYrs] = useState("0");
   const [pubs, setPubs] = useState("0");
   const [extras, setExtras] = useState("0");
+  const [prefillNote, setPrefillNote] = useState<string | null>(null);
+  const hydratedFromProfile = useRef(false);
 
   const years = useMemo(() => {
     const y = new Date().getFullYear();
@@ -138,6 +140,69 @@ export function AdmissionPredictorClient() {
   const primaryUniLabel = useMemo(() => {
     return [uni1, uni2, uni3].map((s) => s.trim()).filter(Boolean)[0] ?? "your target";
   }, [uni1, uni2, uni3]);
+
+  useEffect(() => {
+    if (hydratedFromProfile.current) return;
+    hydratedFromProfile.current = true;
+    void (async () => {
+      try {
+        const [briefRes, hubRes] = await Promise.all([
+          fetch("/api/user/dashboard-brief", { cache: "no-store", credentials: "include" }),
+          fetch("/api/profile-hub", { cache: "no-store", credentials: "include" }),
+        ]);
+        const briefJson = (await briefRes.json()) as {
+          success?: boolean;
+          data?: {
+            profile?: {
+              cgpa?: number | null;
+              degree_type?: string | null;
+              target_country?: string | null;
+              target_universities?: string[] | null;
+              broad_field?: string | null;
+              work_experience_years?: number;
+              gre_score?: number | null;
+              ielts_score?: number | null;
+              toefl_score?: number | null;
+            } | null;
+          };
+        };
+        const hubJson = (await hubRes.json()) as {
+          success?: boolean;
+          data?: { profile_hub?: { profile_intelligence?: { resume?: { cgpa?: number } } } };
+        };
+        const p = briefJson.success ? briefJson.data?.profile ?? null : null;
+        const profileCgpa = p?.cgpa ?? hubJson.data?.profile_hub?.profile_intelligence?.resume?.cgpa;
+
+        if (typeof profileCgpa === "number" && Number.isFinite(profileCgpa) && profileCgpa > 0) {
+          setCgpa(profileCgpa.toFixed(1));
+        }
+        if (typeof p?.degree_type === "string" && p.degree_type.trim()) {
+          setDegree(p.degree_type.trim());
+        }
+        if (typeof p?.target_country === "string" && p.target_country.trim()) {
+          setCountry(p.target_country.trim());
+        }
+        if (Array.isArray(p?.target_universities) && p.target_universities.length) {
+          setUni1(p.target_universities[0] ?? "");
+          setUni2(p.target_universities[1] ?? "");
+          setUni3(p.target_universities[2] ?? "");
+        }
+        if (typeof p?.broad_field === "string" && p.broad_field.trim()) {
+          setCourse((existing) => (existing.trim() ? existing : `MS in ${p.broad_field?.trim()}`));
+        }
+        if (typeof p?.work_experience_years === "number" && Number.isFinite(p.work_experience_years)) {
+          setWorkYrs(String(Math.max(0, p.work_experience_years)));
+        }
+        if (typeof p?.gre_score === "number") setGre(String(p.gre_score));
+        if (typeof p?.ielts_score === "number") setIelts(String(p.ielts_score));
+        if (typeof p?.toefl_score === "number") setToefl(String(p.toefl_score));
+
+        setPrefillNote("Inputs pre-filled from your profile hub. You can edit anything.");
+      } catch {
+        // keep manual defaults
+      }
+    })();
+  }, []);
 
   function parseNum(s: string): number | undefined {
     const t = s.trim();
@@ -221,6 +286,11 @@ export function AdmissionPredictorClient() {
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           Rule-engine estimate plus a short AI summary—use alongside official admissions data.
         </p>
+        {prefillNote ? (
+          <p className="mt-2 inline-flex rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            {prefillNote}
+          </p>
+        ) : null}
       </div>
 
       {!result && !busy && (

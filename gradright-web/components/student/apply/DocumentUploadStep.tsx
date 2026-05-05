@@ -110,8 +110,10 @@ export function DocumentUploadStep({
         Supporting documents
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Up to five files. We run OCR when possible to suggest form values—you
-        stay in control of what gets submitted.
+        Upload up to five files. OCR helps pre-read fields, but you always control final submission.
+      </p>
+      <p className="mt-2 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        Trust badge: documents are encrypted in transit and storage.
       </p>
 
       <div className="mt-4 space-y-4">
@@ -167,7 +169,7 @@ export function DocumentUploadStep({
           onClick={() => void onContinue()}
           disabled={saving || busy}
         >
-          Continue to review
+          Review my application
         </Button>
       </div>
     </GlassCard>

@@ -57,7 +57,10 @@ export function FinancialDetailsForm({
     <GlassCard className="p-6">
       <h2 className="font-heading text-lg font-semibold">Financial details</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Income and co-borrower context lenders use for education loans.
+        Income, co-borrower, and collateral context that lenders use for education loan underwriting.
+      </p>
+      <p className="mt-2 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        Confidence tip: accurate numbers improve approval quality and reduce follow-up calls.
       </p>
       <form onSubmit={(e) => void onSubmit(e)} className="mt-4 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -113,7 +116,7 @@ export function FinancialDetailsForm({
         </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={saving}>
-            Save & continue
+            Save financial details
           </Button>
         </div>
       </form>

@@ -46,6 +46,10 @@ export function FinancingHubClient({
   }, [awardXP]);
 
   const loanAmountInr = loanLakh * 100_000;
+  const targetCountry = profile.target_country?.trim() || "your target country";
+  const programHint =
+    [profile.degree_type, profile.broad_field].filter(Boolean).join(" · ") ||
+    "your program";
 
   const illustrativeCopy = useMemo(() => {
     if (!risk) {
@@ -56,6 +60,29 @@ export function FinancingHubClient({
 
   return (
     <div className="space-y-8">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-3 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Target country
+          </p>
+          <p className="mt-1 font-medium text-foreground">{targetCountry}</p>
+        </div>
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-3 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Program focus
+          </p>
+          <p className="mt-1 font-medium text-foreground">{programHint}</p>
+        </div>
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-3 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Planning loan
+          </p>
+          <p className="mt-1 font-medium text-foreground">
+            ₹{new Intl.NumberFormat("en-IN").format(loanAmountInr)}
+          </p>
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <LoanEligibilityEstimator
           hasRiskScore={risk != null}

@@ -35,8 +35,11 @@ export function ReviewStep({ application }: { application: LoanApplication | nul
     <GlassCard className="p-6">
       <h2 className="font-heading text-lg font-semibold">Review</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Quick pass before you submit. Use edit to jump back to a section.
+        Final quality check before submission. Use Edit to quickly fix any section.
       </p>
+      <div className="mt-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        Trust badge: clearer and complete files usually move faster in credit review.
+      </div>
 
       <div className="mt-6 space-y-6 text-sm">
         <section className="space-y-1 border-b border-border pb-4">
@@ -153,7 +156,7 @@ export function ReviewStep({ application }: { application: LoanApplication | nul
 
       <div className="mt-6 flex justify-end">
         <Button type="button" onClick={() => void finishReview()} disabled={saving}>
-          Looks good — continue
+          Everything looks correct - continue
         </Button>
       </div>
     </GlassCard>

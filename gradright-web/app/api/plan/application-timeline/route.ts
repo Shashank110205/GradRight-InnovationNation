@@ -1,4 +1,7 @@
-import { generateApplicationTimeline } from "@/lib/ai/generate-application-timeline";
+import {
+  buildRuleBasedApplicationTimeline,
+  generateApplicationTimeline,
+} from "@/lib/ai/generate-application-timeline";
 import { createServerClient } from "@/lib/db/supabase";
 import { apiError, apiSuccess } from "@/lib/types";
 import { NextResponse } from "next/server";
@@ -12,6 +15,7 @@ const postBodySchema = z.object({
   targetUniversities: z.array(z.string()),
   currentDate: z.string().min(1),
   profileData: z.record(z.unknown()),
+  fastMode: z.boolean().optional(),
 });
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -40,8 +44,16 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
-  const { data, source } = await generateApplicationTimeline(parsed.data);
+  const { fastMode, ...timelineInput } = parsed.data;
+  const timeline =
+    fastMode === true
+      ? {
+          data: buildRuleBasedApplicationTimeline(timelineInput),
+          source: "fallback" as const,
+        }
+      : await generateApplicationTimeline(timelineInput);
+
   return NextResponse.json(
-    apiSuccess({ ...data, source, kind: "application_timeline" as const })
+    apiSuccess({ ...timeline.data, source: timeline.source, kind: "application_timeline" as const })
   );
 }

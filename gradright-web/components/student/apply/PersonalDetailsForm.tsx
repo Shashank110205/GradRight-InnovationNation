@@ -42,7 +42,11 @@ export function PersonalDetailsForm({
     <GlassCard className="p-6">
       <h2 className="font-heading text-lg font-semibold">Personal details</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        As they should appear on KYC documents.
+        Enter exactly as per KYC documents to avoid verification delays.
+      </p>
+      <p className="mt-2 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        Reassurance: PAN and Aadhaar details are used only for lender verification and remain
+        encrypted.
       </p>
       <form onSubmit={(e) => void onSubmit(e)} className="mt-4 space-y-4">
         <div className="space-y-2">
@@ -101,7 +105,7 @@ export function PersonalDetailsForm({
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="submit" disabled={saving}>
-            Save & continue
+            Save personal details
           </Button>
         </div>
       </form>

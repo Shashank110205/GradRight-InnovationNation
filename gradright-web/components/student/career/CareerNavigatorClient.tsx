@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { GlassCard } from "@/components/shell/GlassCard";
 import {
@@ -133,11 +133,92 @@ export function CareerNavigatorClient() {
   const [phase, setPhase] = useState<"form" | "loading" | "results">("form");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ApiPayload | null>(null);
+  const hydratedFromProfile = useRef(false);
 
   const careerGoalLeft = useMemo(
     () => 200 - careerGoal.length,
     [careerGoal.length]
   );
+
+  useEffect(() => {
+    if (hydratedFromProfile.current) return;
+    hydratedFromProfile.current = true;
+    void (async () => {
+      try {
+        const [briefRes, hubRes] = await Promise.all([
+          fetch("/api/user/dashboard-brief", { cache: "no-store", credentials: "include" }),
+          fetch("/api/profile-hub", { cache: "no-store", credentials: "include" }),
+        ]);
+        const briefJson = (await briefRes.json()) as {
+          success?: boolean;
+          data?: { profile?: Record<string, unknown> | null };
+        };
+        const hubJson = (await hubRes.json()) as {
+          success?: boolean;
+          data?: { profile_hub?: Record<string, unknown> | null };
+        };
+
+        const p = briefJson.success ? briefJson.data?.profile ?? null : null;
+        const ph = hubJson.success ? hubJson.data?.profile_hub ?? null : null;
+        const pi = ph?.profile_intelligence as
+          | {
+              resume?: { cgpa?: number };
+              goals?: { target_role?: string; domain?: string; five_year_goal?: string };
+            }
+          | undefined;
+
+        if (p) {
+          if (typeof p.degree_type === "string" && p.degree_type.trim()) {
+            setCurrentDegree(p.degree_type.trim());
+          }
+          if (typeof p.cgpa === "number" && Number.isFinite(p.cgpa) && p.cgpa > 0) {
+            setCurrentCGPA(Math.min(10, Math.max(5, p.cgpa)));
+          } else if (typeof pi?.resume?.cgpa === "number" && Number.isFinite(pi.resume.cgpa)) {
+            setCurrentCGPA(Math.min(10, Math.max(5, pi.resume.cgpa)));
+          }
+          if (typeof p.work_experience_years === "number" && Number.isFinite(p.work_experience_years)) {
+            setWorkExperienceYears(Math.min(10, Math.max(0, Math.round(p.work_experience_years))));
+          }
+          if (typeof p.budget_band_usd === "string") {
+            const b = p.budget_band_usd;
+            if (b.includes("Under")) setBudgetRange("Under 20L");
+            else if (b.includes("30,000") || b.includes("50,000")) setBudgetRange("20-40L");
+            else if (b.includes("80,000")) setBudgetRange("40-60L");
+            else if (b.includes("Above")) setBudgetRange("60L+");
+          }
+          if (typeof p.broad_field === "string" && p.broad_field.trim()) {
+            const f = p.broad_field.toLowerCase();
+            if (f.includes("computer") || f.includes("software")) setTargetField("Software/Tech");
+            else if (f.includes("data") || f.includes("ai")) setTargetField("Data Science");
+            else if (f.includes("business") || f.includes("mba") || f.includes("finance"))
+              setTargetField("Finance/MBA");
+            else if (f.includes("health")) setTargetField("Healthcare");
+            else if (f.includes("engineer")) setTargetField("Engineering");
+          }
+          if (typeof p.target_country === "string" && p.target_country.trim()) {
+            const tc = p.target_country.toLowerCase();
+            const next: CareerNavigatorPostBody["preferredCountries"] = [];
+            if (tc.includes("united states") || tc.includes("usa")) next.push("USA");
+            if (tc.includes("uk") || tc.includes("united kingdom")) next.push("UK");
+            if (tc.includes("canada")) next.push("Canada");
+            if (tc.includes("germany")) next.push("Germany");
+            if (tc.includes("australia")) next.push("Australia");
+            if (next.length) setPreferredCountries(next);
+          }
+        }
+        if (typeof pi?.goals?.five_year_goal === "string" && pi.goals.five_year_goal.trim()) {
+          setCareerGoal(pi.goals.five_year_goal.trim().slice(0, 200));
+        } else if (
+          typeof pi?.goals?.target_role === "string" &&
+          pi.goals.target_role.trim()
+        ) {
+          setCareerGoal(`Target role: ${pi.goals.target_role.trim()}`.slice(0, 200));
+        }
+      } catch {
+        // keep manual defaults if profile fetch fails
+      }
+    })();
+  }, []);
 
   function toggleCountry(c: (typeof COUNTRY_OPTIONS)[number]) {
     setPreferredCountries((prev) => {
@@ -360,7 +441,7 @@ export function CareerNavigatorClient() {
             )}
 
             <Button type="submit" className="mt-6" size="lg">
-              Find My Best Fit
+              Show Recommendations
             </Button>
           </GlassCard>
         </form>

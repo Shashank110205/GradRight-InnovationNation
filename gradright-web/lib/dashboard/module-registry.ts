@@ -119,12 +119,12 @@ export const HUB_SIDEBAR_SECTIONS: readonly HubSidebarSection[] = [
         featureApi: "/api/features/timeline",
       },
       {
-        href: "/plan/timeline",
+        href: "/plan/application-guide",
         label: "Application Guide",
         featureApi: "/api/features/checklist",
       },
       {
-        href: "/career/navigator",
+        href: "/plan/skills",
         label: "Skills You Need",
         featureApi: "/api/features/skill-roadmap",
       },

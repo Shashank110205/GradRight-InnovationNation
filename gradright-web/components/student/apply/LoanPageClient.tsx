@@ -66,11 +66,14 @@ export function LoanPageClient({
     return (
       <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
         <h2 className="font-heading text-xl font-semibold text-foreground">
-          Application submitted
+          Application submitted successfully
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Thank you. A credit officer will review your file. You can keep using
           GradRight for career and financing prep while you wait.
+        </p>
+        <p className="mt-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+          Next: partner review, potential clarification call, and decision update in your dashboard.
         </p>
       </div>
     );

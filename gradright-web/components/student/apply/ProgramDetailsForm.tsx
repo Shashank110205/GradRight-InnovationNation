@@ -73,7 +73,7 @@ export function ProgramDetailsForm({
         Target program details
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Where you are headed and the all-in cost picture you are planning for.
+        Add destination and cost estimate so financing can be aligned to your actual study plan.
       </p>
       <form onSubmit={(e) => void onSubmit(e)} className="mt-4 space-y-4">
         <div className="space-y-2">
@@ -118,7 +118,7 @@ export function ProgramDetailsForm({
         </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={saving}>
-            Save & continue
+            Save program details
           </Button>
         </div>
       </form>

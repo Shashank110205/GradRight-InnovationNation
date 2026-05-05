@@ -50,6 +50,20 @@ A clean or unsecured loan does not need property pledged, but the approved amoun
 
 Get two or three sanction letters, then line them up on the same loan amount and tenure so the EMI and total payout are easy to compare.`,
   },
+  {
+    id: "co-borrower",
+    title: "Co-borrower expectations",
+    body: `Most student loans require a co-borrower (often parent/guardian) for income support and legal continuity. Lenders review co-borrower income stability, credit history, and existing debt obligations.
+
+Keep co-borrower documents ready early: KYC, income proof, bank statements, and tax returns where applicable.`,
+  },
+  {
+    id: "repayment-rules",
+    title: "Repayment rules to check before signing",
+    body: `Ask these four questions clearly: (1) fixed vs floating rate details, (2) when EMI starts after moratorium, (3) prepayment penalty and foreclosure terms, and (4) late-payment charges and reporting impact.
+
+If any term is unclear, ask for a written example in rupees across one full year.`,
+  },
 ] as const;
 
 export function FinancialLiteracyAccordion() {

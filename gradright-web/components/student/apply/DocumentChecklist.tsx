@@ -52,9 +52,12 @@ export function DocumentChecklist() {
         Your document checklist
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        A personalized list based on your profile. Gather these before you
-        continue—saves time with lenders later.
+        Personalized from your profile and target program. Completing this first speeds up lender
+        review and reduces back-and-forth.
       </p>
+      <div className="mt-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        Trust signal: no commitment yet. This step only prepares your file for faster processing.
+      </div>
 
       {loading ? (
         <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
@@ -74,7 +77,7 @@ export function DocumentChecklist() {
           onClick={() => void onContinue()}
           disabled={saving || loading || !!loadErr || items.length === 0}
         >
-          Continue
+          Checklist ready - continue
         </Button>
       </div>
     </GlassCard>

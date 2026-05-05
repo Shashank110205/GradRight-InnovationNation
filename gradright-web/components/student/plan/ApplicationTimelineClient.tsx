@@ -109,6 +109,7 @@ export function ApplicationTimelineClient({
           targetUniversities: universities,
           currentDate: todayLocalYmd(),
           profileData: profileToPayload(profile),
+          fastMode: true,
         }),
       });
       const json: unknown = await res.json();

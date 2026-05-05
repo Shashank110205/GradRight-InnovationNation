@@ -30,6 +30,17 @@ interface OnboardingStepProps {
   question: QuestionDef;
 }
 
+function displayOptionLabel(questionKey: OnboardingQuestionKey, option: string): string {
+  if (questionKey !== "budget_band_usd") return option;
+  if (option.includes("Under $30,000")) return "Under ₹25 lakh per year";
+  if (option.includes("$30,000") && option.includes("$50,000"))
+    return "₹25–₹42 lakh per year";
+  if (option.includes("$50,000") && option.includes("$80,000"))
+    return "₹42–₹67 lakh per year";
+  if (option.includes("Above $80,000")) return "Above ₹67 lakh per year";
+  return "Not sure yet";
+}
+
 const listContainer = {
   hidden: { opacity: 0 },
   show: {
@@ -250,7 +261,9 @@ export function OnboardingStep({ question }: OnboardingStepProps) {
                       aria-hidden
                     />
                     <span className="relative flex items-start justify-between gap-3">
-                      <span className="text-sm font-semibold leading-snug md:text-base">{option}</span>
+                      <span className="text-sm font-semibold leading-snug md:text-base">
+                        {displayOptionLabel(question.key, option)}
+                      </span>
                       {isMulti && isSel ? (
                         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white">
                           <Check className="size-4" strokeWidth={2.5} />

@@ -40,6 +40,15 @@ function dedupeLines(lines: string[], max: number): string[] {
   return out;
 }
 
+function humanizeCurrency(line: string): string {
+  return line
+    .replace(/Under \$30,?000/gi, "Under ₹25 lakh / year")
+    .replace(/\$30,?000\s*[–-]\s*\$50,?000/gi, "₹25–₹42 lakh / year")
+    .replace(/\$50,?000\s*[–-]\s*\$80,?000/gi, "₹42–₹67 lakh / year")
+    .replace(/Above \$80,?000/gi, "Above ₹67 lakh / year")
+    .replace(/\$([0-9][0-9,]*)/g, "₹$1");
+}
+
 function pickGapFocus(p: FeatureEnrichProfile): string {
   if (p.cgpa != null && p.cgpa < 7) {
     return "strengthening academic evidence and balancing reach with safer admits";
@@ -269,14 +278,14 @@ export function enrichFeatureData(
         ];
 
   return {
-    summary,
-    insights: insights.length ? insights : [EMPTY_SENTINEL],
-    reasons: reasons.length
+    summary: humanizeCurrency(summary),
+    insights: (insights.length ? insights : [EMPTY_SENTINEL]).map(humanizeCurrency),
+    reasons: (reasons.length
       ? reasons
       : [
           "Clear priorities beat scattered effort — lock one gap this month and evidence it on your profile.",
-        ],
-    actions: actions.length ? actions : [...CANONICAL_ACTION_SEEDS],
+        ]).map(humanizeCurrency),
+    actions: (actions.length ? actions : [...CANONICAL_ACTION_SEEDS]).map(humanizeCurrency),
     metrics,
   };
 }
