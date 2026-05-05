@@ -1,321 +1,291 @@
-# GradRight — AI-Powered Career Intelligence, Global Education & Financing Ecosystem
+# GradRight
 
-## Live Demo  
-### Student Portal:  
-[Click Here for the Live Deployed Link](https://gradright-demo.vercel.app/)
+> **The AI-powered platform that unifies career intelligence, university planning, and education financing — for students and lenders alike.**
 
 ---
 
-# Overview  
-GradRight is an AI-first student success and education finance ecosystem that transforms fragmented higher education planning into a single, intelligent journey.
+## 🔗 Live Demo
 
-It helps students move from uncertainty to confident postgraduate decisions by combining:
-
-- Career intelligence  
-- University & country discovery  
-- Admission probability prediction  
-- Scholarship pathways  
-- ROI simulation  
-- Financing literacy  
-- Loan readiness  
-- AI mentorship  
-- NBFC-grade placement & repayment intelligence  
-
-## GradRight transforms the student journey from:  
-### Awareness → Engagement → Trust → Personalization → Prediction → Preparation → Financing → Conversion → Retention
+**[→ Try the Student Portal](https://gradright-demo.vercel.app/)**
 
 ---
 
-# Problem Statement  
+## 🎥 Demo Video
 
-## Student-Side Problem  
-Students planning postgraduate education (abroad or domestic premium institutions) face a disconnected ecosystem spread across multiple tools, counselors, websites, and financial platforms.
+[![GradRight Demo](https://img.youtube.com/vi/gaIQOBJVQmE/maxresdefault.jpg)](https://youtu.be/gaIQOBJVQmE)
 
-This creates friction in:
-- Career planning  
-- University discovery  
-- Admission readiness  
-- Cost forecasting  
-- Scholarship discovery  
-- SOP/LOR preparation  
-- Loan awareness  
-- Repayment confidence  
-
-## NBFC / Lender-Side Problem  
-Traditional education financing systems lack early intelligence on:
-- Employability probability  
-- Placement speed  
-- Salary outcomes  
-- Career risk  
-- Repayment confidence  
-
-This leads to reactive lending instead of predictive support.
+> Click the thumbnail to watch the full walkthrough.
 
 ---
 
-# Our Solution  
-GradRight bridges both ecosystems through a unified AI-powered platform:
+## Overview
 
-## For Students:
-A personalized command center for:
-- Global education planning  
-- Career-aware decisions  
-- Admission + ROI intelligence  
-- Financial preparation  
-- Education loan readiness  
+GradRight is a unified decision-intelligence platform that connects career outcomes, university planning, and education financing into a single system.
 
-## For NBFCs:
-A predictive intelligence console for:
-- Placement-risk analysis  
-- Salary forecasting  
-- Candidate quality scoring  
-- Portfolio visibility  
-- Early intervention support  
+For **students**, it replaces the chaos of scattered counselors, comparison sites, and loan apps with a single guided journey — from first exploring a career path to receiving a loan decision.
+
+For **NBFCs and education lenders**, it replaces guesswork with structured, data-backed insights on every applicant: placement likelihood, salary trajectory, repayment confidence, and more.
+
+The result: students make better decisions, faster — and lenders underwrite with clarity instead of uncertainty.
 
 ---
 
-# Core Innovation  
+## Problem Statement
 
-# GradScore™ — Career + Education + Finance Intelligence Engine  
-GradScore is GradRight’s proprietary intelligence layer that combines:
+### The Student Side
 
-- Academic strength  
-- Career readiness  
-- Placement probability  
-- Admission likelihood  
-- Salary prediction  
-- ROI feasibility  
-- Loan readiness  
-- Repayment confidence  
+Students planning a postgrad degree — domestic or abroad — navigate a completely fragmented ecosystem:
 
-## Outputs:
-- Placement probability (3 / 6 / 12 months)  
-- Salary range forecasting  
-- Risk band classification  
-- Admission confidence  
-- Financial comfort zone  
-- Personalized next-best actions  
+- Career planning happens in isolation from university discovery
+- Admission chances are guessed, not calculated
+- Scholarship and cost information is scattered and hard to compare
+- Loan processes are opaque, intimidating, and disconnected from academic planning
+- No single platform connects career outcomes to financing readiness
 
----
+The result is anxiety, poor decisions, and missed opportunities.
 
-# Student Ecosystem  
+### The Lender Side
 
-## AI Discovery Layer  
-- Career Navigator  
-- Country Explorer  
-- University Discovery Engine  
-- Admission Predictor  
-- Requirement & Timeline Generator  
+Traditional education lenders lack early intelligence on the candidates they're evaluating:
 
-## Funding Intelligence Layer  
-- ROI Reality Engine  
-- Scholarship Intelligence  
-- Cost Planner  
-- Funding Readiness  
-- Loan Literacy  
-- Parent Trust Summary  
+- No visibility into employability or placement probability at application time
+- Salary and repayment outcomes aren't forecasted — they're hoped for
+- Lead quality is assessed manually, inconsistently, and too late
+- Portfolio risk accumulates without early warning signals
 
-## AI Mentor Layer  
-- Personalized AI Copilot  
-- Explainable recommendations  
-- Strategic profile upgrades  
-- Goal clarity  
-
-## Retention Layer  
-- GradPoints  
-- Gamification  
-- Streak systems  
-- Community cohorts  
-- Peer journeys  
+The result is reactive lending, avoidable delinquency, and missed quality candidates.
 
 ---
 
-# NBFC Ecosystem  
+## Solution
 
-## Poonawalla / Lender Intelligence Console  
-- Lead discovery  
-- Student quality analysis  
-- Placement-risk intelligence  
-- Salary prediction  
-- Repayment confidence  
-- Funnel progression  
-- Portfolio monitoring  
-- Human-in-loop review  
+GradRight is a **unified AI-powered decision and financing platform** that addresses both sides simultaneously.
 
----
+Students move through a structured, personalized journey:
 
-# Key Features  
-
-## AI + Predictive Intelligence  
-- Unified student profile engine  
-- Resume & profile parsing  
-- Career prediction systems  
-- Placement-risk modeling  
-- Explainability engine  
-- Scholarship-fit analysis  
-- Loan readiness coaching  
-
-## Product Experience  
-- Landing awareness engine  
-- AI onboarding  
-- WOW GradScore reveal  
-- Dashboard command center  
-- Explore ecosystem  
-- Funding ecosystem  
-- AI mentor  
-- Community engine  
-- NBFC dashboard  
+1. **Onboarding** — structured profiling captures academic background, target programs, career goals, and financial situation
+2. **Risk & Career Insights** — the platform scores placement probability across 3, 6, and 12-month horizons, forecasts salary bands, and surfaces a risk classification with clear explanations
+3. **Admission Intelligence** — generates university lists across safety, match, and reach tiers with admission probability estimates and an AI-generated strategy brief
+4. **Financial Readiness** — models ROI, total cost of study, scholarship fit, and loan eligibility; surfaces a comfort-zone EMI range
+5. **Loan Application** — a guided multi-step workflow collects documents, runs extraction checks, and submits a structured application
+6. **NBFC Decisioning** — submitted applications flow into a lender console with full candidate intelligence, risk signals, and a structured approval/rejection workflow
 
 ---
 
-# Product Architecture  
+## Core Features
 
-## Student Layer  
-Landing → Onboarding → GradScore → Dashboard → Explore → Funding → Conversion → Career Pact  
+### Student Side
 
-## Intelligence Layer  
-GradScore Engine → Admission Engine → ROI Engine → Funding Engine → AI Mentor → Growth Engine  
+**Onboarding & Profile System**
+Structured intake captures academic history, target countries, field of study, work experience, and financial context. Profile data powers all downstream intelligence.
 
-## NBFC Layer  
-Lead Intelligence → Candidate Risk → Conversion Pipeline → Portfolio Analytics  
+**Risk & Placement Intelligence**
+A scoring engine calculates placement probability across three time horizons, forecasts salary bands, assigns a risk tier (low / medium / high), and provides human-readable drivers and recommended actions.
 
----
+**Admission Predictor**
+Based on profile data, the platform estimates admission probability and generates ranked university shortlists across safety, match, and reach bands. Each recommendation includes an AI-generated strategic brief.
 
-# AI Architecture  
+**AI Mentor & Guidance**
+A conversational AI mentor — grounded in the student's profile, risk score, and goals — answers questions, explains recommendations, and suggests concrete next steps. Responses are streamed in real time.
 
-## LLM Layer  
-- Personalized mentorship  
-- Explainable GradScore  
-- ROI narratives  
-- SOP/LOR support  
-- Financial education  
+**Timeline & Planning**
+An AI-generated application timeline maps out milestones, deadlines, and preparation tasks tailored to the student's target intake and selected programs.
 
-## Predictive Layer  
-- Placement timeline prediction  
-- Salary forecasting  
-- Admission probability  
-- Risk segmentation  
-- Loan readiness  
-
-## Automation Layer  
-- Resume parsing  
-- OCR document intelligence  
-- AI nudges  
-- Behavioral personalization  
-- Zero-human growth loops  
+**Loan Application & Document Handling**
+A step-by-step loan application flow saves progress at each stage. Documents are uploaded securely, processed for text extraction, and reviewed against an AI-generated checklist before final submission.
 
 ---
 
-# Tech Stack  
+### NBFC Side
 
-## Frontend  
-- Next.js  
-- TypeScript  
-- Tailwind CSS  
-- Framer Motion  
-- Recharts  
+**Application Review Queue**
+A role-gated console lists all submitted applications with filters by status, risk band, program type, and more. Each row surfaces key signals at a glance.
 
-## Backend  
-- Python  
-- FastAPI  
-- Supabase  
-- PostgreSQL  
-- Drizzle ORM  
+**Candidate Intelligence Panel**
+Full application detail view includes the student's academic profile, risk score, placement probability, salary forecast, eligibility estimate, and uploaded documents — everything needed for a structured underwriting review.
 
-## AI / Data  
-- Modular AI engine architecture  
-- Predictive scoring systems  
-- Resume intelligence  
-- Explainability engine  
-- Real-time scalable data architecture  
+**Decision Workflow**
+Supervisors record a decision (approved / rejected / manual review) with optional notes. Decisions are timestamped and stored against the application record.
 
-## Deployment  
-- Vercel  
+**Portfolio View**
+Aggregated portfolio analytics provide a real-time picture of the submitted application book — risk distribution, approval rates, program mix, and candidate quality metrics.
 
 ---
 
-# User Journey  
+## System Architecture
 
-## Student Journey  
-Landing → Signup → AI Onboarding → WOW Card → Dashboard → Explore → ROI → Funding → Loan Readiness → Conversion  
+GradRight is built as a modular, three-layer system:
 
-## NBFC Journey  
-NBFC Login → Lead Dashboard → Candidate Intelligence → Risk Review → Funnel Management → Portfolio  
+```
+┌─────────────────────────────────────────────┐
+│              Web Application                │
+│   Student Portal  │  NBFC Supervisor Portal │
+└────────────────────┬────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────┐
+│              Backend API Layer              │
+│  Onboarding · Scoring · Admission · Loans   │
+│  AI Mentor  · NBFC Console · Documents      │
+└──────┬──────────────────────────┬───────────┘
+       │                          │
+┌──────▼──────┐          ┌────────▼────────┐
+│  Scoring &  │          │  Database &     │
+│  Decision   │          │  Storage Layer  │
+│  Engine     │          │  (Auth + DB +   │
+│  (Python)   │          │   File Storage) │
+└─────────────┘          └─────────────────┘
+```
 
----
+**Web Application**
+A Next.js App Router application serving both the student portal and the NBFC supervisor console. Portal access is controlled by session-based authentication and middleware routing.
 
-# Why GradRight Is Different  
+**Backend API Layer**
+All product logic — onboarding, scoring, admission prediction, loan lifecycle, NBFC review — is implemented as structured API endpoints within the web application layer. Authentication is enforced on every route.
 
-## Unlike Traditional Platforms:
-### Study Abroad Platforms:
-Only discovery  
+**Scoring & Decision Engine**
+A dedicated Python microservice exposes three core capabilities: placement risk scoring, admission probability estimation, and loan eligibility calculation. It can be run alongside the web app or deployed independently.
 
-### Loan Platforms:
-Only financing  
+**Database & Storage**
+A managed Postgres database stores all application state — user profiles, risk scores, loan applications, and NBFC decisions — accessed via a typed ORM. A separate object storage bucket handles loan document uploads with service-role access controls.
 
-### Career Platforms:
-Only employability  
-
-# GradRight:
-### The first AI-powered Social Finance Intelligence Platform that unifies:
-### Career Success + Education Planning + Financial Confidence + Lending Intelligence
-
----
-
-# Business Value  
-
-## For Students:
-- Better decisions  
-- Reduced uncertainty  
-- Higher trust  
-- Stronger admission outcomes  
-- Smarter financing  
-
-## For NBFCs:
-- Better lead quality  
-- Reduced delinquency risk  
-- Predictive underwriting intelligence  
-- Higher-quality conversion  
-- Portfolio optimization  
+**AI & Automation Layer**
+A generative AI layer powers the mentor chat, dashboard briefs, admission summaries, ROI narratives, and document checklists. All AI outputs are grounded in the student's live profile and scoring context.
 
 ---
 
-# Future Innovation  
+## Tech Stack
 
-## Agentic Education Financing Infrastructure  
-GradRight’s future roadmap includes:
-
-### AI Video KYC  
-- AI-led onboarding  
-- Smart verification  
-- Compliance automation  
-
-### Real-Time DataOps Layer  
-- Job market intelligence  
-- Live salary signals  
-- Scholarship ingestion  
-- Career outcome tracking  
-
-### Post-Loan Career Pact  
-- Placement monitoring  
-- Repayment readiness  
-- Student success lifecycle  
+| Layer | Technologies |
+|---|---|
+| **Frontend** | Next.js (App Router), React, TypeScript, Tailwind CSS, Radix UI |
+| **State & Data Fetching** | Zustand, TanStack Query, Zod |
+| **Backend API** | Next.js Route Handlers (Node runtime) |
+| **Scoring Engine** | Python, FastAPI, Pydantic, Uvicorn |
+| **Database** | PostgreSQL via Supabase, Drizzle ORM |
+| **Auth & Storage** | Supabase Auth (SSR session cookies), Supabase Storage |
+| **AI / Intelligence** | Generative AI (text generation, streaming chat, summaries) |
+| **OCR** | Tesseract.js (image-based document extraction) |
+| **Deployment** | Vercel |
+| **Optional Infra** | Upstash Redis (rate limiting), Resend (email digest) |
 
 ---
 
-# End Goal  
-### Build the AI infrastructure for the complete student-to-career-to-financing lifecycle.
+## Data Flow
+
+### A. Student Journey
+
+```
+Sign Up
+  └─► Onboarding (goals, academics, finances)
+        └─► Scoring Engine (placement probability, salary forecast, risk band)
+              └─► Dashboard (AI brief, score reveal, next actions)
+                    ├─► Explore (admission predictor, university shortlists)
+                    ├─► Plan (timeline generator, prep milestones)
+                    ├─► Finance (ROI engine, eligibility estimate, cost planner)
+                    └─► Apply (loan application, document upload, submission)
+```
+
+### B. NBFC Journey
+
+```
+Supervisor Login
+  └─► Application Queue (submitted loans, filters, risk signals)
+        └─► Candidate Detail (full profile, risk score, salary forecast, docs)
+              └─► Decision (approve / reject / manual review + notes)
+                    └─► Portfolio View (book-level analytics, risk distribution)
+```
 
 ---
 
-# Local Development  
+## What Makes GradRight Different
 
-## Install Dependencies  
+| Platform Type | What They Solve |
+|---|---|
+| Study abroad platforms | University discovery only |
+| Education loan platforms | Financing only |
+| Career platforms | Employability only |
+| **GradRight** | **All three — in one connected flow** |
+
+The core insight is that career outcomes, admission probability, and loan readiness are not separate questions — they are deeply interconnected. GradRight is the first platform to model and present them as a unified signal, for both the student and the lender.
+
+---
+
+## Business & User Value
+
+### For Students
+
+- Clarity on which programs genuinely match their profile and career goals
+- Honest, data-backed probability estimates — not guesswork
+- A realistic picture of cost, ROI, and financing comfort before committing
+- A guided loan application with document intelligence built in
+- An AI mentor available throughout the entire journey
+
+### For NBFCs
+
+- Consistent, structured risk and employability signals on every applicant
+- Early visibility into candidate quality — not just at disbursement
+- Faster, more confident underwriting decisions
+- Portfolio-level insight into placement risk and repayment readiness
+- A cleaner pipeline with fewer surprises post-disbursement
+
+---
+
+## Future Scope
+
+**Richer Market Data Integration**
+Real-time ingestion of job market signals, live salary benchmarks, and scholarship databases to keep scoring outputs current and accurate.
+
+**Advanced Document Intelligence**
+Full server-side PDF processing, multi-document cross-validation, and structured field extraction to reduce manual review burden on both sides.
+
+**Deeper Predictive Modeling**
+Expanded training signals — program-level placement outcomes, cohort comparisons, lender portfolio data — to sharpen placement and repayment predictions over time.
+
+**Post-Loan Career Pact**
+A post-disbursement layer that monitors placement progress, surfaces repayment readiness signals, and enables early intervention before loans become at risk.
+
+**Platform Scaling**
+Multi-lender support, NBFC-specific scoring configurations, white-label capabilities, and mobile-first student experiences.
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Node.js + pnpm
+- Python 3.11+
+- A Supabase project (Auth + Postgres + Storage)
+
+### Quick Start
+
 ```bash
+# 1. Install dependencies
 pnpm install
 
-##Run Full Development
-```bash
-pnpm dev:all
+# 2. Start the scoring engine (separate terminal)
+cd risk-service
+python -m venv .venv && source .venv/bin/activate  # or .\.venv\Scripts\Activate.ps1 on Windows
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# 3. Configure environment
+cp gradright-web/.env.example gradright-web/.env.local
+# Fill in: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+#          SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL,
+#          RISK_ENGINE_URL=http://localhost:8000
+
+# 4. Push database schema
+pnpm --dir gradright-web db:push
+
+# 5. Run the web app
+pnpm dev:web          # Student portal → http://localhost:3000
+pnpm dev:web:all      # Both portals  → :3000 (student) + :3001 (NBFC)
+```
+
+> **Storage note:** Create a Supabase Storage bucket named `loan-documents` before testing document upload flows.
 
 
+---
+
+*Built for the complete student-to-career-to-financing lifecycle.*
